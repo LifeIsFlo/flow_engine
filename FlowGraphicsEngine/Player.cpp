@@ -1,48 +1,48 @@
-#include "Player.h"
-#include "Component.h"
-#include "GameObject.h"
+#include "PlayerRenderer.h"
+#include "Input.h"
+#include "PlayerMovement.h"
+#include "DX11Protocol.h"
+#include "Key.h"
+#include "Transform.h"
+#include "Color.h"
+#include "Vector2.h"
 
-void Player::Update(float fElapsedTime) {
-	if ((FlowEngine::Engine::Get_Key(olc::Key::A).bHeld && wasd) || (!wasd && FlowEngine::Engine::Get_Key(olc::Key::LEFT).bHeld)) {
-		_gameObject->pos += olc::vf2d(-speed * fElapsedTime, 0);
+void PlayerMovement::Update() {
+	if ((FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::A) && wasd) || (!wasd && FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::LEFT))) {
+		transform->pos += FlowEngineDX11::Vector2(-speed, 0);
 	}
-	else if ((FlowEngine::Engine::Get_Key(olc::Key::S).bHeld && wasd) || (!wasd && FlowEngine::Engine::Get_Key(olc::Key::DOWN).bHeld)) {
-		_gameObject->pos += olc::vf2d(0, speed * fElapsedTime);
+	else if ((FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::S) && wasd) || (!wasd && FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::DOWN))) {
+		transform->pos += FlowEngineDX11::Vector2(0, speed);
 	}
-	else if ((FlowEngine::Engine::Get_Key(olc::Key::D).bHeld && wasd) || (!wasd && FlowEngine::Engine::Get_Key(olc::Key::RIGHT).bHeld)) {
-		_gameObject->pos += olc::vf2d(speed * fElapsedTime, 0);
+	else if ((FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::D) && wasd) || (!wasd && FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::RIGHT))) {
+		transform->pos += FlowEngineDX11::Vector2(speed, 0);
 	}
-	else if ((FlowEngine::Engine::Get_Key(olc::Key::W).bHeld && wasd) || (!wasd && FlowEngine::Engine::Get_Key(olc::Key::UP).bHeld))
+	else if ((FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::W) && wasd) || (!wasd && FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::UP)))
 	{
-		_gameObject->pos += olc::vf2d(0, -speed * fElapsedTime);
+		transform->pos += FlowEngineDX11::Vector2(0, -speed);
 	}
-	else if (FlowEngine::Engine::Get_Key(olc::Key::V).bHeld)
+	else if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::V))
 	{
 		speed++;
 	}
-	else if (FlowEngine::Engine::Get_Key(olc::Key::C).bHeld)
+	else if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::C))
 	{
 		speed--;
 	}
-	else if (FlowEngine::Engine::Get_Key(olc::Key::N).bHeld)
+	else if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::N))
 	{
-		_gameObject->scale.x -= 1;
-		_gameObject->scale.y -= 1;
+		transform->scale.x -= 1;
+		transform->scale.y -= 1;
 	}
-	else if(FlowEngine::Engine::Get_Key(olc::Key::M).bHeld)
+	else if(FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::M))
 	{
-		_gameObject->scale.x += 1;
-		_gameObject->scale.y += 1;
+		transform->scale.x += 1;
+		transform->scale.y += 1;
 	}
 }
 
-void Player::Render(FlowEngine::Engine* engine) {
-	olc::vf2d desPos = _gameObject->pos - olc::vf2d(_gameObject->scale.x / 2, _gameObject->scale.y / 2);
 
-	for (float y = 0; y < _gameObject->scale.y; y++) {
-		for (float x = 0; x < _gameObject->scale.x; x++)
-		{
-			engine->Draw(desPos.x + x, desPos.y + y);
-		}
-	}
+void PlayerRenderer::OnRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device)
+{
+	
 }

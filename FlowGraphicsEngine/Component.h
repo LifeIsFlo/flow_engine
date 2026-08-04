@@ -1,12 +1,13 @@
 #pragma once
-#include "Engine.h"
+#include "FWD.h"
 #include "Object.h"
-#include "IUpdatable.h"
 
-namespace FlowEngine {
-	class Component : public Object, public IUpdatable
+namespace FlowEngineDX11 {
+	class Component : public Object
 	{
 	public:
-		GameObject* _gameObject;
+		GameObject* gameObject = nullptr;
+		Transform* transform = nullptr;
+		void SetGameObject(GameObject* _gameObject);
 	};
 }

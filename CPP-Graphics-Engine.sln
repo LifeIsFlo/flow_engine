@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.37502.11 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.8.12023.21
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FlowGraphicsEngine", "FlowGraphicsEngine\FlowGraphicsEngine.vcxproj", "{3A4A6208-9064-4FBE-89AA-F703231093BC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FlowGraphicsEngineDX11", "FlowGraphicsEngine\FlowGraphicsEngine.vcxproj", "{3A4A6208-9064-4FBE-89AA-F703231093BC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

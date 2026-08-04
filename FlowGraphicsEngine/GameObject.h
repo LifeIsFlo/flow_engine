@@ -1,17 +1,46 @@
 #pragma once
-#include "Engine.h"
-#include "ComponentHolderProtocol.h"
-#include <iostream>
-#include <type_traits>
-#include <concepts>
+#include "FWD.h"
+#include <memory>
+#include <vector>
+#include "FlowEngine.h"
+#include "Object.h"
+#include "Component.h"
 
-namespace FlowEngine {
-	class GameObject : public ComponentHolderProtocol
+namespace FlowEngineDX11
+{
+	class GameObject : public Object
 	{
-	public: 
-		GameObject();
+		std::vector<Component*> _components;
 	public:
-		olc::vf2d pos;
-		olc::vf2d scale;
+		Transform* transform = nullptr;
+		void OnInstantiate(FlowEngine* _engine) override;
+
+		template<typename T>
+		requires std::derived_from<T, Component>
+		T* AddComponent()
+		{
+			if (T* comPtr = engine->AddObject<T>()) {
+				comPtr->SetGameObject(this);
+				_components.push_back(comPtr);
+				return comPtr;
+			}
+			std::cout << "Couldn't add component";
+			return nullptr;
+		}
+
+		template<typename T>
+		requires std::derived_from<T, Component>
+		T* GetComponent()
+		{
+			for (Component* com : _components)
+			{
+				if (T* desiredCom = dynamic_cast<T*>(com))
+				{
+					return desiredCom;
+				}
+			}
+			return nullptr;
+		}
+		void PrepareDestroy() override;
 	};
 }

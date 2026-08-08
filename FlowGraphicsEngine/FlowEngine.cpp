@@ -9,20 +9,26 @@
 #include <windows.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
-#include <wrl/client.h> // For Microsoft::WRL::ComPtr
-
+#include <wrl/client.h>
+#include "Camera.h"
 #include "Behaviour.h"
 #include "Input.h"
 #include "Renderer.h"
+#include <chrono>
 
+#include "Time.h"
 
 
 bool FlowEngineDX11::FlowEngine::Tick() {
+    Input::Update();
 
 	for (auto behaviour : behaviours)
 	{
         behaviour->Update();
 	}
+
+    dx11_protocol->Render();
+
     return true;
 }
 
@@ -34,6 +40,9 @@ bool FlowEngineDX11::FlowEngine::AddObjectToRegistry(Object* obj)
         return true;
     case ObjectRegistry::Renderer:
         dx11_protocol->AddRenderer((dynamic_cast<Renderer*>(obj)));
+        return true;
+    case ObjectRegistry::Camera:
+        dx11_protocol->SetCamera(dynamic_cast<Camera*>(obj));
         return true;
     case ObjectRegistry::NONE:
         return true;
@@ -47,28 +56,24 @@ void FlowEngineDX11::FlowEngine::StartGameLoop()
     {
         behaviour->Start();
     }
-
-    // 4. Main Game Loop (PeekMessage avoids blocking)
     MSG msg = {};
+    Time::Init();
     while (true) {
+        Time::BeginFrame();
         if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
 
             if (msg.message == WM_QUIT) break;
         }
-        else {
-            // Render frame when Windows isn't processing messages
-            Tick();
-            dx11_protocol->Render();
-        }
+
+        Tick();
+        Time::EndFrame();
     }
 }
 
 bool FlowEngineDX11::FlowEngine::Run() {
-    dx11_protocol->Init();
-
-    Input::Init();
+    if (!dx11_protocol->Init()) return false;
 
     StartGameLoop();
 

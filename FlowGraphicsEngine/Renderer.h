@@ -1,48 +1,31 @@
 #pragma once
+#include <DirectXMath.h>
+
 #include "Object.h"
 #include "Component.h"
 #include "Transform.h"
 #include "DX11Protocol.h"
+#include <random>
+#include <span>
 
 namespace FlowEngineDX11 {
 	class Renderer : public Component
 	{
-		ComPtr<ID3D11Texture2D> texture2d;
-		ComPtr<ID3D11ShaderResourceView> texture2dSRV;
-		ComPtr<ID3D11Buffer> indexBuffer;
-		ComPtr<ID3D11Buffer> vertexBuffer;
-		virtual void OnRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device);
+	protected:
+		ID3D11Buffer* indexBuffer = nullptr;
+		ID3D11Buffer* vertexBuffer = nullptr;
+		ID3D11Buffer* transformBuffer = nullptr;
 	public:
-		void Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device);
-		HRESULT CreateResources(ID3D11DeviceContext* g_context, ID3D11Device* g_device);
+		~Renderer() override;
+		virtual HRESULT CreateResources(ID3D11DeviceContext* g_context, ID3D11Device* g_device) = 0;
+		void UpdateAndRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera);
+	protected:
+		virtual void Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera) = 0;
+		HRESULT CreateBuffers2D(ID3D11Device* g_device, std::span<const unsigned int> indices, std::span<const Vertex2D> vertices);
 	private:
-		HRESULT CreateTexture(ID3D11Device* g_device);
-		HRESULT UploadTexture(ID3D11DeviceContext* g_context);
-		HRESULT CreateBuffers(ID3D11Device* g_device);
+		DirectX::XMFLOAT4X4 CreateGPUMatrix(Camera* camera);
+		HRESULT UpdateTransformBuffer(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera);
 	public:
-		float GetWidth()
-		{
-			return transform->scale.x;
-		}
-		float GetHeight()
-		{
-			return transform->scale.y;
-		}
-		std::vector<Color> GetColorData()
-		{
-			std::vector<Color> colors;
-			colors.resize(GetHeight() * GetWidth());
-
-			for (int y = 0; y < GetHeight(); y++) {
-				for (int x = 0; x < GetWidth(); x++)
-				{
-					int i = y * GetWidth() + x;
-					colors[i] = Color(255, 255, 255, 255);
-				}
-			}
-
-			return colors;
-		}
 		ObjectRegistry GetRegistry() override;
 	};
 }

@@ -11,6 +11,10 @@ namespace FlowEngineDX11 {
 		constexpr Vector2(const float _x = 0.0f, const float _y = 0.0f) noexcept
 			: x(_x), y(_y){}
 
+		static float Distance(Vector2 first, Vector2 second);
+
+		float Magnitude();
+
 		Vector2 operator +(const Vector2& added) const {
 			return {x + added.x, y + added.y};
 		}

@@ -128,6 +128,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Behaviour.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CameraMovement.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Component.h" />
     <ClCompile Include="FlowEngine.cpp" />
@@ -138,12 +140,19 @@
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Sprite.cpp" />
+    <ClCompile Include="SpriteRenderer.cpp" />
+    <ClCompile Include="Time.cpp" />
+    <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Vector2.cpp" />
     <ClCompile Include="Vertex2D.cpp" />
     <ClCompile Include="DX11Protocol.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Behaviour.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="FlowEngine.h" />
     <ClInclude Include="FWD.h" />
@@ -152,9 +161,12 @@
     <ClInclude Include="Key.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="PlayerMovement.h" />
-    <ClInclude Include="PlayerRenderer.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="Sprite.h" />
+    <ClInclude Include="SpriteRenderer.h" />
+    <ClInclude Include="Time.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vertex2D.h" />

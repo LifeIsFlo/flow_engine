@@ -6,7 +6,8 @@
 #include "Color.h"
 #include <vector>
 #include <wrl/client.h>
-using Microsoft::WRL::ComPtr;
+
+#include "Camera.h"
 
 namespace FlowEngineDX11
 {
@@ -15,25 +16,32 @@ namespace FlowEngineDX11
 		static DX11Protocol* current;
 		std::string _windowTitle;
 		std::vector<Renderer*> renderers;
-		D3D11_VIEWPORT viewport;
-		UINT _windowHeight;
-		UINT _windowWidth;
-		ComPtr<ID3D11Texture2D> backBuffer;
-		ComPtr<ID3D11Device>           g_device;
-		ComPtr<ID3D11DeviceContext>    g_context;
-		ComPtr<IDXGISwapChain>         g_swapChain;
-		ComPtr<ID3D11RenderTargetView> g_renderTargetView;
-		ComPtr<ID3D11VertexShader> VS;
-		ComPtr<ID3D11PixelShader> PS;
+		UINT _renderHeight;
+		UINT _renderWidth;
+		ID3D11RenderTargetView* g_renderTargetView = nullptr;
+		ID3D11DeviceContext* g_context = nullptr;
+		ID3D11Texture2D* g_backBuffer = nullptr;
+		Camera* mainCamera = nullptr;
+		IDXGISwapChain* g_swapChain = nullptr;
+		Shader* shader = nullptr;
+		ID3D11Device* g_device = nullptr;
+		ID3D11SamplerState* texture2dSampler = nullptr;
 		bool _fullScreen;
 	public:
 		DX11Protocol(const UINT& windowHeight, const UINT& windowWidth, const std::string& windowTitle, const bool& fullScreen);
 		bool Init();
+		HRESULT CreateResources();
 		void Render();
-		void ApplyChanges();
+		HRESULT ApplyChanges();
 		Renderer* AddRenderer(Renderer* renderer);
+		Camera* SetCamera(Camera* camera)
+		{
+			this->mainCamera = camera;
+			return mainCamera;
+		}
 		void CleanUp();
-		void Clear(const Color color);
+		void BeginFrame(Color color);
+		void EndFrame();
 	private:
 		static LRESULT CALLBACK WindowProcStatic(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		LRESULT WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

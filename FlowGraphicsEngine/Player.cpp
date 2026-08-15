@@ -1,44 +1,46 @@
+#include <numbers>
+
 #include "Input.h"
 #include "PlayerMovement.h"
+#include "GameObject.h"
+#include "SpriteRenderer.h"
+#include "Sprite.h"
 #include "DX11Protocol.h"
-#include "Key.h"
+#include "Keys.h"
 #include "Transform.h"
 #include "Color.h"
+#include "Console.hpp"
+#include "Time.h"
 #include "Vector2.h"
+#include "Vector3.h"
 
-void PlayerMovement::Update() {
-
+void PlayerMovement::Update() 
+{
 	/*
 	if ((FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::A) && wasd) || (!wasd && FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::LEFT))) {
-		transform->position += FlowEngineDX11::Vector2(-speed, 0);
+		transform->rotation.y -= .01f;
 	}
 	else if ((FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::S) && wasd) || (!wasd && FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::DOWN))) {
-		transform->position += FlowEngineDX11::Vector2(0, speed);
+		transform->rotation.x -= .01f;
 	}
 	else if ((FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::D) && wasd) || (!wasd && FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::RIGHT))) {
-		transform->position += FlowEngineDX11::Vector2(speed, 0);
+		transform->rotation.y += .01f;
 	}
 	else if ((FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::W) && wasd) || (!wasd && FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::UP)))
 	{
-		transform->position += FlowEngineDX11::Vector2(0, -speed);
+		transform->rotation.x += .01f;
 	}
-	else if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::V))
+	if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::R))
 	{
-		speed++;
-	}
-	else if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::C))
-	{
-		speed--;
-	}
-	else if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::N))
-	{
-		transform->scale.x -= 1;
-		transform->scale.y -= 1;
-	}
-	else if(FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::M))
-	{
-		transform->scale.x += 1;
-		transform->scale.y += 1;
+		transform->rotation = FlowEngineDX11::Vector3::ZERO;
 	}
 	*/
+
+	if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::Z))
+	{
+		transform->rotation.y += speed * FlowEngineDX11::Time::deltaTime;
+	}
+
+
+	flowio::Console::WriteLine(std::to_string(transform->rotation.x) + "," + std::to_string(transform->rotation.y));
 }

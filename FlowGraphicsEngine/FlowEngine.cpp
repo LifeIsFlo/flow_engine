@@ -10,14 +10,13 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <wrl/client.h>
+#include <algorithm>
 #include "Camera.h"
 #include "Behaviour.h"
 #include "Input.h"
 #include "Renderer.h"
 #include <chrono>
-
 #include "Time.h"
-
 
 bool FlowEngineDX11::FlowEngine::Tick() {
     Input::Update();
@@ -29,6 +28,8 @@ bool FlowEngineDX11::FlowEngine::Tick() {
 
     dx11_protocol->Render();
 
+    ResolveDestroyedObjects();
+
     return true;
 }
 
@@ -39,15 +40,51 @@ bool FlowEngineDX11::FlowEngine::AddObjectToRegistry(Object* obj)
         behaviours.push_back(dynamic_cast<Behaviour*>(obj));
         return true;
     case ObjectRegistry::Renderer:
-        dx11_protocol->AddRenderer((dynamic_cast<Renderer*>(obj)));
+        dx11_protocol->AddRenderer(dynamic_cast<Renderer*>(obj));
         return true;
     case ObjectRegistry::Camera:
         dx11_protocol->SetCamera(dynamic_cast<Camera*>(obj));
         return true;
-    case ObjectRegistry::NONE:
+    default:
         return true;
     }
-    return false;
+}
+
+void FlowEngineDX11::FlowEngine::RemoveObjectFromRegistry(Object* obj)
+{
+	switch (obj->GetRegistry())
+	{
+	case ObjectRegistry::Behaviour:
+        std::erase_if(behaviours, [obj](const Behaviour* behaviour)
+        {
+                return behaviour == obj;
+        });
+	case ObjectRegistry::Renderer:
+        dx11_protocol->RemoveRenderer(dynamic_cast<Renderer*>(obj));
+	}
+}
+
+void FlowEngineDX11::FlowEngine::ResolveDestroyedObjects()
+{
+    int deadObjects = 0;
+
+	for (auto& obj : objects)
+	{
+        if (obj->isDead())
+        {
+            RemoveObjectFromRegistry(obj.get());
+            deadObjects++;
+        }
+	}
+
+    std::erase_if(objects, [](const std::unique_ptr<Object>& element)
+        {
+            return element->isDead();
+        });
+
+    if (deadObjects > 0) {
+        objects.shrink_to_fit();
+    }
 }
 
 void FlowEngineDX11::FlowEngine::StartGameLoop()

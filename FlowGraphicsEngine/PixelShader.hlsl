@@ -1,17 +1,21 @@
 Texture2D shaderTexture : register(t0);
 SamplerState sampleType : register(s0);
 
-struct VSInput
+struct PSInput
 {
-    float4 position : SV_Position;
-    float2 uv : TEXCOORD0;
+    float4 position : SV_POSITION;
+    float3 uvw : TEXCOORD0;
+    float3 localPos : TEXCOORD1;
 };
 
-float4 main(VSInput input) : SV_TARGET
+float4 main(PSInput input) : SV_TARGET
 {
-    float4 textureColor = shaderTexture.Sample(sampleType, input.uv);
+    //float4 textureColor = shaderTexture.Sample(sampleType, input.uvw);
+    float gradient = (input.localPos.y + 1.0f) * 0.5f;
 
-    //float4 textureColor = float4(1, 0, 0, 1);
+    gradient = saturate(gradient);    
 
-    return textureColor;
+    float3 baseColor = float3(0, 1.0f, 1.0f);
+
+    return float4(baseColor * gradient, 1.0f);
 }

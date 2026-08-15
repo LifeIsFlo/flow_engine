@@ -127,15 +127,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AssetDatabase.cpp" />
+    <ClCompile Include="AssetLoader.cpp" />
     <ClCompile Include="Behaviour.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CameraMovement.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Component.h" />
+    <ClCompile Include="Console.cpp" />
+    <ClCompile Include="ConsoleColor.cpp" />
+    <ClCompile Include="Debug.cpp" />
     <ClCompile Include="FlowEngine.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshRenderer.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="ObjLoader.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Renderer.cpp" />
@@ -146,20 +154,29 @@
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Vector2.cpp" />
-    <ClCompile Include="Vertex2D.cpp" />
+    <ClCompile Include="Vector3.cpp" />
     <ClCompile Include="DX11Protocol.cpp" />
+    <ClCompile Include="Vertex.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AssetDatabase.h" />
+    <ClInclude Include="AssetLoader.h" />
     <ClInclude Include="Behaviour.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Color.h" />
+    <ClInclude Include="Console.hpp" />
+    <ClInclude Include="ConsoleColor.hpp" />
+    <ClInclude Include="Debug.hpp" />
     <ClInclude Include="FlowEngine.h" />
     <ClInclude Include="FWD.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Input.h" />
-    <ClInclude Include="Key.h" />
+    <ClInclude Include="Keys.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshRenderer.h" />
     <ClInclude Include="Object.h" />
+    <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="PlayerMovement.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />
@@ -169,8 +186,9 @@
     <ClInclude Include="Time.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="Vector2.h" />
-    <ClInclude Include="Vertex2D.h" />
+    <ClInclude Include="Vector3.h" />
     <ClInclude Include="DX11Protocol.h" />
+    <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="PixelShader.hlsl">

@@ -2,7 +2,10 @@
 #include "Object.h"
 
 FlowEngineDX11::Object::Object() = default;
-FlowEngineDX11::Object::~Object() = default;
+FlowEngineDX11::Object::~Object()
+{
+	std::cout << "object released";
+};
 
 void FlowEngineDX11::Object::Destroy(Object* objToDestroy) {
 	objToDestroy->Destroy();

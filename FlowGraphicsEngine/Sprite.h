@@ -1,19 +1,20 @@
 #pragma once
 #include <d3d11.h>
+#include "AssetItem.h"
 #include "FWD.h"
 
 namespace FlowEngineDX11
 {
-	class Sprite
+	class Sprite : public AssetItem
 	{
 		ID3D11Texture2D* texture2d = nullptr;
 		ID3D11ShaderResourceView* texture2dSRV = nullptr;
 	public:
 		UINT artificialTextureWidth = 10;
 		UINT artificialTextureHeight = 10;
-		Sprite(UINT artificialWidth, UINT artificialHeight);
+		Sprite(UINT artificialWidth, UINT artificialHeight, std::string assetLocation);
+		~Sprite();
 		HRESULT CreateTexture(ID3D11Device* g_device);
-		HRESULT UploadTexture(ID3D11DeviceContext* g_context);
 		ID3D11ShaderResourceView* GetTextureResource()
 		{
 			return texture2dSRV;
@@ -41,7 +42,7 @@ namespace FlowEngineDX11
 			}
 			return artificialTextureHeight;
 		}
-		~Sprite();
-		std::vector<Color> GetArtificialColorData();
+
+		void GetArtificialColorData(std::vector<Color>* colors);
 	};
 }

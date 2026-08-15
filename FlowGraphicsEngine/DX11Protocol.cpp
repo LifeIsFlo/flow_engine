@@ -6,6 +6,8 @@
 #include <d3dcompiler.h>
 #include "Shader.h"
 #include <wrl/client.h>
+
+#include "Console.hpp"
 #include "Input.h"
 // Link required DirectX libraries
 #pragma comment(lib, "d3d11.lib")
@@ -29,7 +31,7 @@ bool FlowEngineDX11::DX11Protocol::Init()
     if (!mainCamera) return false;
     HINSTANCE hInstance = GetModuleHandle(nullptr);
 
-    constexpr  wchar_t CLASS_NAME[] = L"DirectXEngineClass";
+    constexpr wchar_t CLASS_NAME[] = L"DirectXEngineClass";
 
     WNDCLASSEX wc = { };
     wc.cbSize = sizeof(WNDCLASSEX);
@@ -60,14 +62,20 @@ bool FlowEngineDX11::DX11Protocol::Init()
 
     ShowWindow(hwnd, SW_SHOW);
 
-    if (FAILED(InitD3D(hwnd))) {
+    HRESULT hr = InitD3D(hwnd);
+
+    if (FAILED(hr)) {
         MessageBox(hwnd, L"Failed to initialize DirectX 11", L"Error", MB_OK);
+        std::cout << hr;
         return false;
     }
 
-    if (FAILED(CreateResources()))
+    hr = CreateResources();
+
+    if (FAILED(hr))
     {
 	    MessageBox(hwnd, L"Couldn't make the proper resources", L"Error", MB_OK);
+        std::cout << hr;
         return false;
     }
 
@@ -81,15 +89,14 @@ HRESULT FlowEngineDX11::DX11Protocol::CreateResources()
     HRESULT hr;
     for (Renderer* renderer : renderers)
     {
-        std::cout << "Creating resources for renderer";
         hr = renderer->CreateResources(g_context, g_device);
         if (FAILED(hr)) return hr;
-        std::cout << "Resources for renderer created";
     }
 
     D3D11_INPUT_ELEMENT_DESC ILDesc[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 1, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
     shader = new Shader(L"PixelShader.cso", L"VertexShader.cso", ILDesc, 2);
@@ -107,6 +114,59 @@ HRESULT FlowEngineDX11::DX11Protocol::CreateResources()
     samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
     hr = g_device->CreateSamplerState(&samplerDesc, &texture2dSampler);
+    if (FAILED(hr)) return hr;
+
+
+    D3D11_BLEND_DESC blendDesc = {};
+    blendDesc.RenderTarget[0].BlendEnable = TRUE;                     // 4. Turn blending ON/OFF
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;    // 5. RGB Source multiplier
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;// 6. RGB Destination multiplier
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;       // 7. RGB Equation operator
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;          // 8. Alpha Source multiplier
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;         // 9. Alpha Destination multiplier
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;       // 10. Alpha Equation operator
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; // 11. Channel toggles
+    blendDesc.AlphaToCoverageEnable = false;
+
+    hr = g_device->CreateBlendState(&blendDesc, &g_blendState);
+    if (FAILED(hr)) return hr;
+
+    D3D11_RASTERIZER_DESC rasterizerDesc = {};
+    rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+    rasterizerDesc.CullMode = D3D11_CULL_BACK;
+    rasterizerDesc.FrontCounterClockwise = FALSE;
+    rasterizerDesc.MultisampleEnable = TRUE;
+
+    hr = g_device->CreateRasterizerState(&rasterizerDesc, &g_rasterizerState);
+    if (FAILED(hr)) return hr;
+
+
+    D3D11_TEXTURE2D_DESC depthStencilViewTextureDesc = {};
+    depthStencilViewTextureDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthStencilViewTextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthStencilViewTextureDesc.SampleDesc.Count = 1;
+    depthStencilViewTextureDesc.SampleDesc.Quality = 0;
+    depthStencilViewTextureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilViewTextureDesc.Height = _renderHeight;
+    depthStencilViewTextureDesc.Width = _renderWidth;
+    depthStencilViewTextureDesc.MipLevels = 1;
+    depthStencilViewTextureDesc.ArraySize = 1;
+    depthStencilViewTextureDesc.CPUAccessFlags = 0;
+    depthStencilViewTextureDesc.MiscFlags = 0;
+
+    hr = g_device->CreateTexture2D(&depthStencilViewTextureDesc, nullptr, &g_depthStencilBuffer);
+    if (FAILED(hr)) return hr;
+
+    hr = g_device->CreateDepthStencilView(g_depthStencilBuffer, nullptr, &g_depthStencilView);
+    if (FAILED(hr)) return hr;
+
+
+    D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
+    depthStencilDesc.DepthEnable = true;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+    hr = g_device->CreateDepthStencilState(&depthStencilDesc, &g_depthStencilState);
     if (FAILED(hr)) return hr;
 
     return S_OK;
@@ -209,7 +269,7 @@ HRESULT FlowEngineDX11::DX11Protocol::ApplyChanges()
     hr = g_device->CreateRenderTargetView(g_backBuffer, nullptr, &g_renderTargetView);
     if (FAILED(hr)) return hr;
 
-    g_context->OMSetRenderTargets(1, &g_renderTargetView, nullptr);
+    g_context->OMSetRenderTargets(1, &g_renderTargetView, g_depthStencilView);
 
     mainCamera->viewHeight = _renderHeight;
     mainCamera->viewWidth = _renderWidth;
@@ -223,6 +283,14 @@ FlowEngineDX11::Renderer* FlowEngineDX11::DX11Protocol::AddRenderer(Renderer* re
 {
     renderers.push_back(renderer);
     return renderer;
+}
+
+void FlowEngineDX11::DX11Protocol::RemoveRenderer(Renderer* renderer)
+{
+    std::erase_if(renderers, [renderer] (const Renderer* element)
+    {
+        return element == renderer;
+    });
 }
 
 void FlowEngineDX11::DX11Protocol::CleanUp()
@@ -266,24 +334,38 @@ void FlowEngineDX11::DX11Protocol::BeginFrame(const Color color)
     g_context->OMSetRenderTargets(
         1,
         &g_renderTargetView,
-        nullptr);
+        g_depthStencilView);
+
+    g_context->OMSetDepthStencilState(g_depthStencilState, 0);
 
     g_context->RSSetViewports(1, mainCamera->GetViewport());
+    g_context->RSSetState(g_rasterizerState);
 
     auto floats = color.ToFloatArray();
     const float colorArr[4] = {floats[0], floats[1], floats[2], floats[3]};
 
     g_context->ClearRenderTargetView(g_renderTargetView, colorArr);
+    g_context->ClearDepthStencilView(g_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     g_context->PSSetShader(shader->GetPixelShader(), nullptr, 0);
     g_context->VSSetShader(shader->GetVertexShader(), nullptr, 0);
     g_context->IASetInputLayout(shader->GetInputLayout());
     g_context->PSSetSamplers(0, 1, &texture2dSampler);
     g_context->IASetPrimitiveTopology(
         D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    constexpr float factor[4] = {1,1,1,1}; 
+    g_context->OMSetBlendState(g_blendState, factor, 0xffffffff);
 }
 
 void FlowEngineDX11::DX11Protocol::EndFrame()
 {
     g_swapChain->Present(1, 0);
+    flowio::Console::Clear();
+}
+
+void FlowEngineDX11::DX11Protocol::FlushUnusedData()
+{
+    g_context->ClearState();
+    g_context->Flush();
+    std::cout << "flushed data";
 }
 

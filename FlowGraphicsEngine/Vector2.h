@@ -8,30 +8,34 @@ namespace FlowEngineDX11 {
 
 		constexpr Vector2() noexcept = default;
 
-		constexpr Vector2(const float _x = 0.0f, const float _y = 0.0f) noexcept
+		constexpr Vector2(const float _x, const float _y) noexcept
 			: x(_x), y(_y){}
 
 		static float Distance(Vector2 first, Vector2 second);
 
 		float Magnitude();
 
-		Vector2 operator +(const Vector2& added) const {
-			return {x + added.x, y + added.y};
+		Vector2 operator+(const Vector2& added) const {
+			return { x + added.x, y + added.y };
 		}
 
-		Vector2 operator +=(const Vector2& added) const {
-			return *this + added;
+		Vector2 operator+=(const Vector2& added) {
+			x += added.x;
+			y += added.y;
+			return *this;
 		}
 
-		Vector2 operator -(const Vector2& removed) const {
+		Vector2 operator-(const Vector2& removed) const {
 			return { x - removed.x, y - removed.y };
 		}
 
-		Vector2 operator -=(const Vector2& removed) const {
-			return *this - removed;
+		Vector2 operator-=(const Vector2& removed) {
+			x -= removed.x;
+			y -= removed.y;
+			return *this;
 		}
-		//inline static constexpr Vector2 ZERO{ 0.0f, 0.0f };
-		//inline static constexpr Vector2 ONE{ 1.0f, 1.0f };
+		static const Vector2 ZERO;
+		static const Vector2 ONE;
 	};
 	
 }

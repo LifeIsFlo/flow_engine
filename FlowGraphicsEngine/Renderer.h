@@ -18,10 +18,10 @@ namespace FlowEngineDX11 {
 	public:
 		~Renderer() override;
 		virtual HRESULT CreateResources(ID3D11DeviceContext* g_context, ID3D11Device* g_device) = 0;
+		HRESULT CreateBuffers(ID3D11Device* g_device, std::span<const unsigned int> indices, std::span<const Vertex> vertices);
 		void UpdateAndRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera);
 	protected:
 		virtual void Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera) = 0;
-		HRESULT CreateBuffers2D(ID3D11Device* g_device, std::span<const unsigned int> indices, std::span<const Vertex2D> vertices);
 	private:
 		DirectX::XMFLOAT4X4 CreateGPUMatrix(Camera* camera);
 		HRESULT UpdateTransformBuffer(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera);

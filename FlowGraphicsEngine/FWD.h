@@ -18,11 +18,17 @@ namespace FlowEngineDX11
 	class FlowEngine;
 	class Component;
 	class Renderer;
+	class AssetItem;
+	class AssetLoader;
+	class AssetDatabase;
 	class SpriteRenderer;
+	class MeshRenderer;
+	class Mesh;
 	class Sprite;
 	class Transform;
 	struct Vector2;
-	struct Vertex2D;
+	struct Vector3;
+	struct Vertex;
 	class Input;
 	class SceneManager;
 	enum class Keys : uint8_t;

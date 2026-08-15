@@ -2,9 +2,11 @@
 #include "Color.h"
 #include "Vector2.h"
 #include <d3d11.h>
+#include <iostream>
+
 #include "FWD.h"
 
-FlowEngineDX11::Sprite::Sprite(UINT artificialWidth, UINT artificialHeight)
+FlowEngineDX11::Sprite::Sprite(UINT artificialWidth, UINT artificialHeight, std::string assetLocation) : AssetItem(assetLocation)
 {
 	this->artificialTextureWidth = artificialWidth;
 	this->artificialTextureHeight = artificialHeight;
@@ -19,10 +21,15 @@ HRESULT FlowEngineDX11::Sprite::CreateTexture(ID3D11Device* g_device)
 	desc.ArraySize = 1;
 	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	desc.SampleDesc.Count = 1;
-	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	HRESULT hr = g_device->CreateTexture2D(&desc, nullptr, &texture2d);
+	desc.CPUAccessFlags = 0;
+
+	std::vector<Color> colors;
+	GetArtificialColorData(&colors);
+	D3D11_SUBRESOURCE_DATA subresource_data = { colors.data(), artificialTextureWidth * sizeof(Color), 0};
+
+	HRESULT hr = g_device->CreateTexture2D(&desc, &subresource_data, &texture2d);
 	if (FAILED(hr)) return hr;
 
 	hr = g_device->CreateShaderResourceView(texture2d, nullptr, &texture2dSRV);
@@ -31,49 +38,11 @@ HRESULT FlowEngineDX11::Sprite::CreateTexture(ID3D11Device* g_device)
 	return S_OK;
 }
 
-HRESULT FlowEngineDX11::Sprite::UploadTexture(ID3D11DeviceContext* g_context)
+void FlowEngineDX11::Sprite::GetArtificialColorData(std::vector<Color>* colors)
 {
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	HRESULT hr = g_context->Map(
-		texture2d,
-		0,
-		D3D11_MAP_WRITE_DISCARD, // Discards last frame's data so GPU doesn't stall
-		0,
-		&mappedResource
-	);
+	colors->resize(artificialTextureHeight * artificialTextureWidth);
 
-	if (SUCCEEDED(hr)) {
-		auto colors = GetArtificialColorData();
-		BYTE* gpuMemory = static_cast<BYTE*>(mappedResource.pData);
-		BYTE* cpuMemory = reinterpret_cast<BYTE*>(colors.data());
-
-		size_t byteWidthCount = GetWidth() * sizeof(Color);
-
-		// Row-by-row copy handles potential GPU memory alignment padding securely
-		for (UINT row = 0; row < GetHeight(); ++row) {
-			memcpy(
-				gpuMemory + (row * mappedResource.RowPitch),
-				cpuMemory + (row * byteWidthCount),
-				byteWidthCount
-			);
-		}
-
-		g_context->Unmap(texture2d, 0);
-	}
-	else
-	{
-		return hr;
-	}
-
-	return S_OK;
-}
-
-std::vector<FlowEngineDX11::Color> FlowEngineDX11::Sprite::GetArtificialColorData()
-{
-	std::vector<Color> colors;
-	colors.resize(artificialTextureHeight * artificialTextureWidth);
-
-	for (int i = 0; i < colors.size(); i++)
+	for (int i = 0; i < colors->size(); i++)
 	{
 		int y = std::floor(i / artificialTextureWidth);
 		int x = i - y * artificialTextureWidth;
@@ -81,13 +50,15 @@ std::vector<FlowEngineDX11::Color> FlowEngineDX11::Sprite::GetArtificialColorDat
 		Vector2 center = { artificialTextureWidth / 2.0f, artificialTextureHeight / 2.0f };
 		float distance = Vector2::Distance(center, pos);
 
-		if (distance < 100 && distance > 98)
+		if (distance < center.x && distance > center.x / 1.25)
 		{
-			colors[i] = Color(255, 0, 0, 255);
+			(*colors)[i] = Color(255, 0, 0, 255);
+		}
+		else
+		{
+			(*colors)[i] = Color(0, 0, 0, 100);
 		}
 	}
-
-	return colors;
 }
 
 FlowEngineDX11::Sprite::~Sprite()

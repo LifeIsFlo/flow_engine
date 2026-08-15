@@ -1,7 +1,6 @@
 #pragma once
 #include <d3d11.h>
 #include <iostream>
-#include "Vertex2D.h"
 #include "FWD.h"
 #include "Color.h"
 #include <vector>
@@ -19,6 +18,11 @@ namespace FlowEngineDX11
 		UINT _renderHeight;
 		UINT _renderWidth;
 		ID3D11RenderTargetView* g_renderTargetView = nullptr;
+		ID3D11DepthStencilView* g_depthStencilView = nullptr;
+		ID3D11Texture2D* g_depthStencilBuffer = nullptr; 
+		ID3D11RasterizerState* g_rasterizerState = nullptr;
+		ID3D11DepthStencilState* g_depthStencilState = nullptr;
+		ID3D11BlendState* g_blendState = nullptr;
 		ID3D11DeviceContext* g_context = nullptr;
 		ID3D11Texture2D* g_backBuffer = nullptr;
 		Camera* mainCamera = nullptr;
@@ -34,6 +38,7 @@ namespace FlowEngineDX11
 		void Render();
 		HRESULT ApplyChanges();
 		Renderer* AddRenderer(Renderer* renderer);
+		void RemoveRenderer(Renderer* renderer);
 		Camera* SetCamera(Camera* camera)
 		{
 			this->mainCamera = camera;
@@ -42,6 +47,7 @@ namespace FlowEngineDX11
 		void CleanUp();
 		void BeginFrame(Color color);
 		void EndFrame();
+		void FlushUnusedData();
 	private:
 		static LRESULT CALLBACK WindowProcStatic(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		LRESULT WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

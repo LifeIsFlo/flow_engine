@@ -34,6 +34,18 @@
     <Filter Include="Header Files\GFX">
       <UniqueIdentifier>{f43f1852-4284-4d39-88ed-e7a2d2d6174f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\flowio">
+      <UniqueIdentifier>{2d6315b0-274d-45d7-93bd-964fb94deaba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\flowio">
+      <UniqueIdentifier>{2b4d4aca-f2b5-4ae6-9f3a-7b8bc78f8173}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Assets">
+      <UniqueIdentifier>{beade3c0-42b4-4240-b141-465debde3b9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Assets">
+      <UniqueIdentifier>{d06373bd-15c2-4218-90a9-af9174fee4f6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FlowEngine.cpp">
@@ -49,9 +61,6 @@
       <Filter>Source Files\API</Filter>
     </ClCompile>
     <ClCompile Include="Vector2.cpp">
-      <Filter>Source Files\API</Filter>
-    </ClCompile>
-    <ClCompile Include="Vertex2D.cpp">
       <Filter>Source Files\API</Filter>
     </ClCompile>
     <ClCompile Include="DX11Protocol.cpp">
@@ -97,7 +106,37 @@
       <Filter>Source Files\API</Filter>
     </ClCompile>
     <ClCompile Include="Shader.cpp">
+      <Filter>Source Files\GFX</Filter>
+    </ClCompile>
+    <ClCompile Include="Vertex.cpp">
       <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="Console.cpp">
+      <Filter>Source Files\flowio</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleColor.cpp">
+      <Filter>Source Files\flowio</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug.cpp">
+      <Filter>Source Files\flowio</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector3.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshRenderer.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="AssetLoader.cpp">
+      <Filter>Source Files\Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="AssetDatabase.cpp">
+      <Filter>Source Files\Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjLoader.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -134,16 +173,13 @@
     <ClInclude Include="Input.h">
       <Filter>Header Files\API</Filter>
     </ClInclude>
-    <ClInclude Include="Key.h">
+    <ClInclude Include="Keys.h">
       <Filter>Header Files\API</Filter>
     </ClInclude>
     <ClInclude Include="Transform.h">
       <Filter>Header Files\API</Filter>
     </ClInclude>
     <ClInclude Include="Vector2.h">
-      <Filter>Header Files\API</Filter>
-    </ClInclude>
-    <ClInclude Include="Vertex2D.h">
       <Filter>Header Files\API</Filter>
     </ClInclude>
     <ClInclude Include="PlayerMovement.h">
@@ -158,11 +194,41 @@
     <ClInclude Include="SpriteRenderer.h">
       <Filter>Header Files\API</Filter>
     </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>Header Files\API</Filter>
-    </ClInclude>
     <ClInclude Include="Sprite.h">
       <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Header Files\GFX</Filter>
+    </ClInclude>
+    <ClInclude Include="Console.hpp">
+      <Filter>Header Files\flowio</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleColor.hpp">
+      <Filter>Header Files\flowio</Filter>
+    </ClInclude>
+    <ClInclude Include="Debug.hpp">
+      <Filter>Header Files\flowio</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector3.h">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshRenderer.h">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="AssetLoader.h">
+      <Filter>Header Files\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="AssetDatabase.h">
+      <Filter>Header Files\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjLoader.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

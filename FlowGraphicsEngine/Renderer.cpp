@@ -1,12 +1,10 @@
 #include "Renderer.h"
 
 #include <span>
-
+#include "Vertex.h"
 #include "Transform.h"
 #include "Camera.h"
 #include "DirectXMath.h"
-
-
 
 FlowEngineDX11::Renderer::~Renderer()
 {
@@ -23,20 +21,13 @@ FlowEngineDX11::Renderer::~Renderer()
 		transformBuffer->Release();
 		transformBuffer = nullptr;
 	}
-	std::cout << "Renderer Released!";
 }
 
-void FlowEngineDX11::Renderer::UpdateAndRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera)
-{
-	UpdateTransformBuffer(g_context, g_device, camera);
-	Render(g_context, g_device, camera);
-}
-
-HRESULT FlowEngineDX11::Renderer::CreateBuffers2D(ID3D11Device* g_device, std::span<const unsigned int> indices, std::span<const Vertex2D> vertices)
+HRESULT FlowEngineDX11::Renderer::CreateBuffers(ID3D11Device* g_device, std::span<const unsigned int> indices, std::span<const Vertex> vertices)
 {
 	D3D11_BUFFER_DESC vertexBufferDesc{};
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = vertices.size() * sizeof(Vertex2D);
+	vertexBufferDesc.ByteWidth = vertices.size() * sizeof(Vertex);
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
 	D3D11_SUBRESOURCE_DATA vInitData = {};
@@ -66,6 +57,17 @@ HRESULT FlowEngineDX11::Renderer::CreateBuffers2D(ID3D11Device* g_device, std::s
 	if (FAILED(hr)) return hr;
 
 	return S_OK;
+}
+
+void FlowEngineDX11::Renderer::UpdateAndRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera)
+{
+	UpdateTransformBuffer(g_context, g_device, camera);
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	g_context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	g_context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, offset);
+	g_context->VSSetConstantBuffers(0, 1, &transformBuffer);
+	Render(g_context, g_device, camera);
 }
 
 DirectX::XMFLOAT4X4 FlowEngineDX11::Renderer::CreateGPUMatrix(Camera* camera)

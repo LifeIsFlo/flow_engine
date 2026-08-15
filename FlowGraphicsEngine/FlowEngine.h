@@ -22,6 +22,8 @@ namespace FlowEngineDX11
 		bool Run();
 		bool Tick();
 		bool AddObjectToRegistry(Object* obj);
+		void RemoveObjectFromRegistry(Object* obj);
+		void ResolveDestroyedObjects();
 	public:
 		template<typename T>
 		requires std::derived_from<T, Object>

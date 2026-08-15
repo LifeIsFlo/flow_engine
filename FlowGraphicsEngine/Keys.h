@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <dinput.h>
 
 namespace FlowEngineDX11 {
 	enum class Keys : uint8_t {

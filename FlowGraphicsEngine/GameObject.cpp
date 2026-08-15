@@ -13,4 +13,5 @@ void FlowEngineDX11::GameObject::PrepareDestroy()
 	{
 		com->Destroy();
 	}
+	_components.clear();
 }

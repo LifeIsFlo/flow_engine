@@ -1,11 +1,13 @@
 #pragma once
 #include "FWD.h"
+#include "Vector3.h"
 
 namespace FlowEngineDX11
 {
 	struct Vertex
 	{
-		float x = 0, y = 0, z = 0;
-		float u, v, w;
+		Vector3 position;
+		Vector3 normal;
+		Vector2 uv;
 	};
 }

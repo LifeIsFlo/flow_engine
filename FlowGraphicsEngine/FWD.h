@@ -17,13 +17,15 @@ namespace FlowEngineDX11
 	class Behaviour;
 	class FlowEngine;
 	class Component;
+	class Light;
 	class Renderer;
-	class AssetItem;
+	class Material;
 	class AssetLoader;
 	class AssetDatabase;
 	class SpriteRenderer;
 	class MeshRenderer;
 	class Mesh;
+	class Model;
 	class Sprite;
 	class Transform;
 	struct Vector2;

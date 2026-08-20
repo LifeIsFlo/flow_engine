@@ -17,7 +17,7 @@ namespace FlowEngineDX11
 		std::vector<std::unique_ptr<Object>> objects;
 		std::vector<Behaviour*> behaviours;
 	public:
-		FlowEngine(const size_t& height, const size_t& width, const bool& fullScreen, const std::string& title);
+		FlowEngine(const size_t& height, const size_t& width, const bool& fullScreen, const std::string& title, const bool& vSync);
 		void StartGameLoop();
 		bool Run();
 		bool Tick();

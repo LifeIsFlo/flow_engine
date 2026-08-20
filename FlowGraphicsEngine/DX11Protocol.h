@@ -15,6 +15,7 @@ namespace FlowEngineDX11
 		static DX11Protocol* current;
 		std::string _windowTitle;
 		std::vector<Renderer*> renderers;
+		std::vector<Light*> lights;
 		UINT _renderHeight;
 		UINT _renderWidth;
 		ID3D11RenderTargetView* g_renderTargetView = nullptr;
@@ -31,18 +32,25 @@ namespace FlowEngineDX11
 		ID3D11Device* g_device = nullptr;
 		ID3D11SamplerState* texture2dSampler = nullptr;
 		bool _fullScreen;
+		bool _vSync;
 	public:
-		DX11Protocol(const UINT& windowHeight, const UINT& windowWidth, const std::string& windowTitle, const bool& fullScreen);
+		DX11Protocol(const UINT& windowHeight, const UINT& windowWidth, const std::string& windowTitle, const bool& fullScreen, const bool& vSync);
 		bool Init();
 		HRESULT CreateResources();
 		void Render();
 		HRESULT ApplyChanges();
+		Light* AddLight(Light* light);
 		Renderer* AddRenderer(Renderer* renderer);
+		void RemoveLight(Light* light);
 		void RemoveRenderer(Renderer* renderer);
 		Camera* SetCamera(Camera* camera)
 		{
 			this->mainCamera = camera;
 			return mainCamera;
+		}
+		bool isMainCamera(const Camera* camera) const
+		{
+			return mainCamera == camera;
 		}
 		void CleanUp();
 		void BeginFrame(Color color);

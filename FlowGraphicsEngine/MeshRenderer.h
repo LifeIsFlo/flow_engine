@@ -9,7 +9,7 @@ namespace FlowEngineDX11
 	{
 	public:
 		Mesh* mesh = nullptr;
-		~MeshRenderer();
+		Sprite* sprite = nullptr;
 	protected:
 		void Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera) override;
 	public:

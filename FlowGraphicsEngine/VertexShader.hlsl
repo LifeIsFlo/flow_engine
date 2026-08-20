@@ -1,14 +1,16 @@
 struct VSInput
 {
     float3 position : POSITION;
-    float3 uvw : TEXCOORD0;
+    float3 normal : NORMAL;
+    float2 uv : TEXCOORD0;
 };
 
-struct VSOutput
+struct PSInput
 {
     float4 position : SV_POSITION;
-    float3 uvw : TEXCOORD0;
-    float3 localPos : TEXCOORD1;
+    float3 normal : NORMAL;
+    float2 uv : TEXCOORD0;
+    float3 localPos : POSITION;
 };
 
 cbuffer Transform : register(b0)
@@ -16,13 +18,14 @@ cbuffer Transform : register(b0)
     matrix transform;
 };
 
-VSOutput main(VSInput input)
+PSInput main(VSInput input)
 {
-    VSOutput output;
+    PSInput output;
 
     output.position = mul(float4(input.position, 1), transform);
-    output.uvw = input.uvw;
-    output.localPos = input.position;
+    output.uv = input.uv;
+    output.normal = input.normal;
+    output.localPos = output.position;
 
     return output;
 }

@@ -40,7 +40,4 @@ void PlayerMovement::Update()
 	{
 		transform->rotation.y += speed * FlowEngineDX11::Time::deltaTime;
 	}
-
-
-	flowio::Console::WriteLine(std::to_string(transform->rotation.x) + "," + std::to_string(transform->rotation.y));
 }

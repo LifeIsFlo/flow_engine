@@ -7,6 +7,7 @@
 #include "Shader.h"
 #include <wrl/client.h>
 
+#include "AssetDatabase.h"
 #include "Console.hpp"
 #include "Input.h"
 // Link required DirectX libraries
@@ -16,12 +17,13 @@
 
 FlowEngineDX11::DX11Protocol* FlowEngineDX11::DX11Protocol::current = nullptr;
 
-FlowEngineDX11::DX11Protocol::DX11Protocol(const UINT& windowHeight, const UINT& windowWidth, const std::string& windowTitle, const bool& fullScreen)
+FlowEngineDX11::DX11Protocol::DX11Protocol(const UINT& windowHeight, const UINT& windowWidth, const std::string& windowTitle, const bool& fullScreen, const bool& vSync)
 {
     _renderHeight = windowHeight;
     _renderWidth = windowWidth;
     _windowTitle = windowTitle;
     _fullScreen = fullScreen;
+    _vSync = vSync;
 
     current = this;
 }
@@ -91,34 +93,35 @@ HRESULT FlowEngineDX11::DX11Protocol::CreateResources()
     {
         hr = renderer->CreateResources(g_context, g_device);
         if (FAILED(hr)) return hr;
+
     }
 
     D3D11_INPUT_ELEMENT_DESC ILDesc[] = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 1, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
-    shader = new Shader(L"PixelShader.cso", L"VertexShader.cso", ILDesc, 2);
+    shader = new Shader(L"PixelShader.cso", L"VertexShader.cso", ILDesc, 3);
 
     hr = shader->InitShader(g_device);
     if (FAILED(hr)) return hr;
 
     D3D11_SAMPLER_DESC samplerDesc = {};
-    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
     samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
     samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     samplerDesc.MinLOD = 0;
     samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    samplerDesc.MaxAnisotropy = 16;
 
     hr = g_device->CreateSamplerState(&samplerDesc, &texture2dSampler);
     if (FAILED(hr)) return hr;
 
 
     D3D11_BLEND_DESC blendDesc = {};
-    blendDesc.RenderTarget[0].BlendEnable = TRUE;                     // 4. Turn blending ON/OFF
+    blendDesc.RenderTarget[0].BlendEnable = FALSE;                     // 4. Turn blending ON/OFF
     blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;    // 5. RGB Source multiplier
     blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;// 6. RGB Destination multiplier
     blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;       // 7. RGB Equation operator
@@ -193,8 +196,17 @@ HRESULT FlowEngineDX11::DX11Protocol::InitD3D(HWND hwnd)
         featureLevels, 1, D3D11_SDK_VERSION, &scd,
         &g_swapChain, &g_device, nullptr, &g_context
     );
-
     if (FAILED(hr)) return hr;
+
+    IDXGIFactory* factory = nullptr;
+    hr = g_swapChain->GetParent(__uuidof(IDXGIFactory), (void**)&factory);
+    if (SUCCEEDED(hr)) {
+        // Stops DXGI from changing your window styles or states automatically
+        factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_WINDOW_CHANGES);
+        factory->Release();
+        factory = nullptr;
+    }
+    else return hr;
 
     ApplyChanges();
 
@@ -208,6 +220,18 @@ LRESULT CALLBACK FlowEngineDX11::DX11Protocol::WindowProcStatic(HWND hwnd, UINT 
 
 LRESULT FlowEngineDX11::DX11Protocol::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
+    case WM_ACTIVATEAPP:
+        if (g_swapChain) {
+            if (wParam != FALSE)
+            {
+                ApplyChanges();
+            }
+            else
+            {
+
+            }
+        }
+        return 0;
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
@@ -235,7 +259,7 @@ LRESULT FlowEngineDX11::DX11Protocol::WindowProc(HWND hwnd, UINT uMsg, WPARAM wP
 
 void FlowEngineDX11::DX11Protocol::Render()
 {
-    BeginFrame({100,100,255,255});
+    BeginFrame({100,100,100,255});
 
     for (Renderer* renderer : renderers)
     {
@@ -260,8 +284,10 @@ HRESULT FlowEngineDX11::DX11Protocol::ApplyChanges()
         g_backBuffer = nullptr;
     }
 	
+    g_swapChain->SetFullscreenState(_fullScreen, nullptr);
     HRESULT hr = g_swapChain->ResizeBuffers(0, _renderWidth, _renderHeight, DXGI_FORMAT_UNKNOWN, 0);
     if (FAILED(hr)) return hr;
+
 
     hr = g_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&g_backBuffer));
     if (FAILED(hr)) return hr;
@@ -279,10 +305,24 @@ HRESULT FlowEngineDX11::DX11Protocol::ApplyChanges()
     return S_OK;
 }
 
+FlowEngineDX11::Light* FlowEngineDX11::DX11Protocol::AddLight(Light* light)
+{
+    lights.push_back(light);
+    return light;
+}
+
 FlowEngineDX11::Renderer* FlowEngineDX11::DX11Protocol::AddRenderer(Renderer* renderer)
 {
     renderers.push_back(renderer);
     return renderer;
+}
+
+void FlowEngineDX11::DX11Protocol::RemoveLight(Light* light)
+{
+    std::erase_if(lights, [light](const Light* element)
+        {
+            return light == element;
+        });
 }
 
 void FlowEngineDX11::DX11Protocol::RemoveRenderer(Renderer* renderer)
@@ -325,6 +365,7 @@ void FlowEngineDX11::DX11Protocol::CleanUp()
         texture2dSampler = nullptr;
     }
     Input::CleanUp();
+    AssetDatabase::CleanUp();
 }
 
 // Drawing functions
@@ -358,7 +399,7 @@ void FlowEngineDX11::DX11Protocol::BeginFrame(const Color color)
 
 void FlowEngineDX11::DX11Protocol::EndFrame()
 {
-    g_swapChain->Present(1, 0);
+    g_swapChain->Present(_vSync, 0);
     flowio::Console::Clear();
 }
 

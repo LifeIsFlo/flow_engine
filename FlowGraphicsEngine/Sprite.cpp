@@ -6,7 +6,7 @@
 
 #include "FWD.h"
 
-FlowEngineDX11::Sprite::Sprite(UINT artificialWidth, UINT artificialHeight, std::string assetLocation) : AssetItem(assetLocation)
+FlowEngineDX11::Sprite::Sprite(UINT artificialWidth, UINT artificialHeight)
 {
 	this->artificialTextureWidth = artificialWidth;
 	this->artificialTextureHeight = artificialHeight;
@@ -44,19 +44,19 @@ void FlowEngineDX11::Sprite::GetArtificialColorData(std::vector<Color>* colors)
 
 	for (int i = 0; i < colors->size(); i++)
 	{
-		int y = std::floor(i / artificialTextureWidth);
+		int y = floor(i / artificialTextureWidth);
 		int x = i - y * artificialTextureWidth;
 		Vector2 pos = { static_cast<float>(x), static_cast<float>(y) };
 		Vector2 center = { artificialTextureWidth / 2.0f, artificialTextureHeight / 2.0f };
 		float distance = Vector2::Distance(center, pos);
 
-		if (distance < center.x && distance > center.x / 1.25)
+		if (distance < center.x / 2)
 		{
 			(*colors)[i] = Color(255, 0, 0, 255);
 		}
 		else
 		{
-			(*colors)[i] = Color(0, 0, 0, 100);
+			(*colors)[i] = Color(255, 255, 255, 255);
 		}
 	}
 }

@@ -7,6 +7,7 @@ HRESULT FlowEngineDX11::SpriteRenderer::CreateResources(ID3D11DeviceContext* g_c
 	HRESULT hr = sprite->CreateTexture(g_device);
 	if (FAILED(hr)) return hr;
 
+	/*
 	Vertex quad[] =
 	{
 		{-0.5f,  0.5f, 0, 0, 0, 0}, // 0
@@ -20,8 +21,9 @@ HRESULT FlowEngineDX11::SpriteRenderer::CreateResources(ID3D11DeviceContext* g_c
 		0,1,2,
 		2,1,3
 	};
+	*/
 
-	hr = CreateBuffers(g_device, indices, quad);
+	hr = CreateBuffers(g_device);
 	if (FAILED(hr)) return hr;
 
 
@@ -32,12 +34,4 @@ void FlowEngineDX11::SpriteRenderer::Render(ID3D11DeviceContext* g_context, ID3D
 {
 	g_context->PSSetShaderResources(0, 1, sprite->GetTextureResourceAddress());
 	g_context->DrawIndexed(6, 0, 0);
-}
-
-FlowEngineDX11::SpriteRenderer::~SpriteRenderer()
-{
-	if (sprite) {
-		delete sprite;
-		sprite = nullptr;
-	}
 }

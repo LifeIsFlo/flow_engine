@@ -140,8 +140,11 @@
     <ClCompile Include="FlowEngine.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Light.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshRenderer.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ObjLoader.cpp" />
     <ClCompile Include="Player.cpp" />
@@ -153,6 +156,7 @@
     <ClCompile Include="SpriteRenderer.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="Util.cpp" />
     <ClCompile Include="Vector2.cpp" />
     <ClCompile Include="Vector3.cpp" />
     <ClCompile Include="DX11Protocol.cpp" />
@@ -163,6 +167,7 @@
     <ClInclude Include="AssetLoader.h" />
     <ClInclude Include="Behaviour.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CameraBuffer.h" />
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Console.hpp" />
@@ -173,8 +178,11 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Keys.h" />
+    <ClInclude Include="Light.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshRenderer.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="PlayerMovement.h" />
@@ -185,6 +193,8 @@
     <ClInclude Include="SpriteRenderer.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="TransformBuffer.h" />
+    <ClInclude Include="Util.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="DX11Protocol.h" />
@@ -201,6 +211,23 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Cube.mtl" />
+    <None Include="I%27m pickle rick.mtl" />
+    <None Include="street lamp.mtl" />
+    <None Include="Untitled.fbx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Cube.obj">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="I%27m pickle rick.obj">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="street lamp.obj">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -6,22 +6,22 @@
 
 namespace FlowEngineDX11 {
 	enum class ObjectState : uint8_t { Active, Dead };
-	enum class ObjectRegistry : uint8_t {Renderer, Behaviour, Camera, NONE};
+	enum class ObjectRegistry : uint8_t {Renderer, Behaviour, Camera, Light, Asset, NONE};
 	class Object
 	{
 	protected:
 		FlowEngine* engine = nullptr;
+	public:
+		std::string name = "newObject";
 	private:
 		ObjectState m_state = ObjectState::Active;
 	public:
 		Object();
 		virtual ~Object();
-
 		Object(const Object&) = delete;
 		Object& operator=(const Object&) = delete;
 		Object(Object&&) = delete;
 		Object& operator=(Object&&) = delete;
-
 		bool isDead() const;
 		void OnInstantiateObject(FlowEngine* _engine)
 		{

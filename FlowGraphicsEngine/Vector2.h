@@ -34,6 +34,12 @@ namespace FlowEngineDX11 {
 			y -= removed.y;
 			return *this;
 		}
+
+		std::string ToString()
+		{
+			return std::to_string(x) + ", " + std::to_string(y);
+		}
+
 		static const Vector2 ZERO;
 		static const Vector2 ONE;
 	};

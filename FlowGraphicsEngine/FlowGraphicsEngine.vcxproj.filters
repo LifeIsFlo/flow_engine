@@ -46,6 +46,9 @@
     <Filter Include="Header Files\Assets">
       <UniqueIdentifier>{d06373bd-15c2-4218-90a9-af9174fee4f6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Assets">
+      <UniqueIdentifier>{9e276176-d6b9-4104-b56d-ff9270916a5b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FlowEngine.cpp">
@@ -108,9 +111,6 @@
     <ClCompile Include="Shader.cpp">
       <Filter>Source Files\GFX</Filter>
     </ClCompile>
-    <ClCompile Include="Vertex.cpp">
-      <Filter>Source Files\API</Filter>
-    </ClCompile>
     <ClCompile Include="Console.cpp">
       <Filter>Source Files\flowio</Filter>
     </ClCompile>
@@ -136,7 +136,22 @@
       <Filter>Source Files\Assets</Filter>
     </ClCompile>
     <ClCompile Include="ObjLoader.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="Util.cpp">
+      <Filter>Source Files\flowio</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>Source Files\GFX</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="Vertex.cpp">
+      <Filter>Source Files\API</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -227,8 +242,26 @@
     <ClInclude Include="AssetDatabase.h">
       <Filter>Header Files\Assets</Filter>
     </ClInclude>
+    <ClInclude Include="Util.h">
+      <Filter>Header Files\flowio</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>Header Files\GFX</Filter>
+    </ClInclude>
     <ClInclude Include="ObjLoader.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="TransformBuffer.h">
+      <Filter>Header Files\GFX</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraBuffer.h">
+      <Filter>Header Files\GFX</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -238,5 +271,28 @@
     <FxCompile Include="VertexShader.hlsl">
       <Filter>Resource Files\Engine</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Cube.mtl">
+      <Filter>Resource Files\Assets</Filter>
+    </None>
+    <None Include="I%27m pickle rick.mtl">
+      <Filter>Resource Files\Assets</Filter>
+    </None>
+    <None Include="Untitled.fbx">
+      <Filter>Resource Files\Assets</Filter>
+    </None>
+    <None Include="street lamp.mtl">
+      <Filter>Resource Files\Assets</Filter>
+    </None>
+    <None Include="Cube.obj">
+      <Filter>Resource Files\Assets</Filter>
+    </None>
+    <None Include="I%27m pickle rick.obj">
+      <Filter>Resource Files\Assets</Filter>
+    </None>
+    <None Include="street lamp.obj">
+      <Filter>Resource Files\Assets</Filter>
+    </None>
   </ItemGroup>
 </Project>

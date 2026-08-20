@@ -25,6 +25,8 @@ namespace FlowEngineDX11
 		HRESULT CreateViewport();
 		D3D11_VIEWPORT* GetViewport();
 		DirectX::XMMATRIX CreateViewProjectionMatrix();
+		HRESULT CreateBuffers(ID3D11Device* g_device);
+		HRESULT UpdateBuffers(ID3D11DeviceContext* g_context);
 		ObjectRegistry GetRegistry() override;
 	};
 }

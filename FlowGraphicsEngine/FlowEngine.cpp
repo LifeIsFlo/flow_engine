@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "Camera.h"
 #include "Behaviour.h"
+#include "Light.h"
 #include "Input.h"
 #include "Renderer.h"
 #include <chrono>
@@ -45,6 +46,9 @@ bool FlowEngineDX11::FlowEngine::AddObjectToRegistry(Object* obj)
     case ObjectRegistry::Camera:
         dx11_protocol->SetCamera(dynamic_cast<Camera*>(obj));
         return true;
+    case ObjectRegistry::Light:
+        dx11_protocol->AddLight(dynamic_cast<Light*>(obj));
+        return true;
     default:
         return true;
     }
@@ -59,8 +63,17 @@ void FlowEngineDX11::FlowEngine::RemoveObjectFromRegistry(Object* obj)
         {
                 return behaviour == obj;
         });
+        break;
 	case ObjectRegistry::Renderer:
         dx11_protocol->RemoveRenderer(dynamic_cast<Renderer*>(obj));
+        break;
+	case ObjectRegistry::Light:
+        dx11_protocol->RemoveLight(dynamic_cast<Light*>(obj));
+        break;
+	case ObjectRegistry::Camera:
+        Camera* camera = dynamic_cast<Camera*>(obj);
+        if (dx11_protocol->isMainCamera(camera)) dx11_protocol->SetCamera(nullptr);
+        break;
 	}
 }
 
@@ -119,6 +132,6 @@ bool FlowEngineDX11::FlowEngine::Run() {
     return true;
 }
 
-FlowEngineDX11::FlowEngine::FlowEngine(const size_t& height, const size_t& width, const bool& fullScreen, const std::string& title) {
-    this->dx11_protocol = std::make_unique<DX11Protocol>(height, width, title, fullScreen);
+FlowEngineDX11::FlowEngine::FlowEngine(const size_t& height, const size_t& width, const bool& fullScreen, const std::string& title, const bool& vSync) {
+    this->dx11_protocol = std::make_unique<DX11Protocol>(height, width, title, fullScreen, vSync);
 }

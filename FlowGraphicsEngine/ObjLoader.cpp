@@ -92,7 +92,7 @@ void FlowEngineDX11::ObjLoader::LoadModel(std::ifstream& fileStream, std::map<st
                     int uvIndex = std::stoi(sep[1]) - addToTextureIndex - 1;
                     int normalIndex = std::stoi(sep[2]) - addToNormalIndex - 1;
 
-                    vertices.push_back({ positions[positionIndex], normals[normalIndex], textureCoords[uvIndex] });
+                    vertices.push_back({ positions[positionIndex], normals[normalIndex], textureCoords[uvIndex], Color(150,150,150,255)});
 
                     indices.push_back(indexCount);
                     indexCount++;

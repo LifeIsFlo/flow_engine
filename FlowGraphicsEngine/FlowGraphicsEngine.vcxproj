@@ -167,7 +167,7 @@
     <ClInclude Include="AssetLoader.h" />
     <ClInclude Include="Behaviour.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="CameraBuffer.h" />
+    <ClInclude Include="ViewProjectionBuffer.h" />
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Console.hpp" />
@@ -193,7 +193,6 @@
     <ClInclude Include="SpriteRenderer.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="Transform.h" />
-    <ClInclude Include="TransformBuffer.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />

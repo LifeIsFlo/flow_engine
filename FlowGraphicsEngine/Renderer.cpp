@@ -5,7 +5,6 @@
 #include "Transform.h"
 #include "Camera.h"
 #include "DirectXMath.h"
-#include "TransformBuffer.h"
 
 FlowEngineDX11::Renderer::~Renderer()
 {
@@ -16,12 +15,12 @@ FlowEngineDX11::Renderer::~Renderer()
 	}
 }
 
-HRESULT FlowEngineDX11::Renderer::CreateBuffers(ID3D11Device* g_device)
+HRESULT FlowEngineDX11::Renderer::CreateBuffers(ID3D11Device* g_device, ID3D11DeviceContext* g_context)
 {
 	D3D11_BUFFER_DESC transformBufferDesc{};
 	transformBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	transformBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	transformBufferDesc.ByteWidth = sizeof(TransformBuffer);
+	transformBufferDesc.ByteWidth = sizeof(DirectX::XMFLOAT4X4);
 	transformBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
 	HRESULT hr = g_device->CreateBuffer(&transformBufferDesc, nullptr, &transformBuffer);
@@ -30,20 +29,23 @@ HRESULT FlowEngineDX11::Renderer::CreateBuffers(ID3D11Device* g_device)
 	return S_OK;
 }
 
-void FlowEngineDX11::Renderer::UpdateAndRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera)
+void FlowEngineDX11::Renderer::UpdateAndRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device)
 {
-	UpdateTransformBuffer(g_context, g_device, camera);
+	UpdateTransformBuffer(g_context, g_device);
 	g_context->VSSetConstantBuffers(0, 1, &transformBuffer);
-	Render(g_context, g_device, camera);
+	Render(g_context, g_device);
 }
 
-HRESULT FlowEngineDX11::Renderer::UpdateTransformBuffer(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera)
+HRESULT FlowEngineDX11::Renderer::UpdateTransformBuffer(ID3D11DeviceContext* g_context, ID3D11Device* g_device)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedTransform;
 	HRESULT hr = g_context->Map(transformBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedTransform);
 
 	if (SUCCEEDED(hr)) {
-		TransformBuffer transformMatrix = {};
+		DirectX::XMFLOAT4X4 transformMatrix;
+		DirectX::XMStoreFloat4x4(&transformMatrix, DirectX::XMMatrixTranspose(
+			transform->CreateMatrix()
+		));
 
 		memcpy(mappedTransform.pData, &transformMatrix, sizeof(transformMatrix));
 

@@ -41,7 +41,9 @@ int main()
 	FlowEngineDX11::GameObject* cameraObj = engine.AddObject<FlowEngineDX11::GameObject>();
 	FlowEngineDX11::Camera* cam = cameraObj->AddComponent<FlowEngineDX11::Camera>();
 	cameraObj->AddComponent<CameraMovement>();
-	cameraObj->transform->position.z -= 2;
+	cameraObj->transform->position.z -= 10;
+	cameraObj->transform->position.y += 2;
+	cameraObj->transform->rotation.x += 0.2f;
 	cam->projectionMode = FlowEngineDX11::Camera::Perspective;
 	
 

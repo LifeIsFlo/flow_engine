@@ -257,10 +257,7 @@
     <ClInclude Include="Model.h">
       <Filter>Header Files\API</Filter>
     </ClInclude>
-    <ClInclude Include="TransformBuffer.h">
-      <Filter>Header Files\GFX</Filter>
-    </ClInclude>
-    <ClInclude Include="CameraBuffer.h">
+    <ClInclude Include="ViewProjectionBuffer.h">
       <Filter>Header Files\GFX</Filter>
     </ClInclude>
   </ItemGroup>

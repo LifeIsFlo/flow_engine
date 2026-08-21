@@ -3,7 +3,7 @@
 #include "Sprite.h"
 #include "Vertex.h"
 
-void FlowEngineDX11::MeshRenderer::Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera)
+void FlowEngineDX11::MeshRenderer::Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device)
 {
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
@@ -17,7 +17,7 @@ void FlowEngineDX11::MeshRenderer::Render(ID3D11DeviceContext* g_context, ID3D11
 
 HRESULT FlowEngineDX11::MeshRenderer::CreateResources(ID3D11DeviceContext* g_context, ID3D11Device* g_device)
 {
-	HRESULT hr = CreateBuffers(g_device);
+	HRESULT hr = CreateBuffers(g_device, g_context);
 	if (FAILED(hr)) return hr;
 
 	hr = mesh->CreateBuffers(g_device);
@@ -27,6 +27,8 @@ HRESULT FlowEngineDX11::MeshRenderer::CreateResources(ID3D11DeviceContext* g_con
 		hr = sprite->CreateTexture(g_device);
 		if (FAILED(hr)) return hr;
 	}
+
+
 
 	return S_OK;
 }

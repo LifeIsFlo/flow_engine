@@ -16,12 +16,12 @@ namespace FlowEngineDX11 {
 	public:
 		~Renderer() override;
 		virtual HRESULT CreateResources(ID3D11DeviceContext* g_context, ID3D11Device* g_device) = 0;
-		HRESULT CreateBuffers(ID3D11Device* g_device);
-		void UpdateAndRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera);
+		HRESULT CreateBuffers(ID3D11Device* g_device, ID3D11DeviceContext* g_context);
+		void UpdateAndRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device);
 	protected:
-		virtual void Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera) = 0;
+		virtual void Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device) = 0;
 	private:
-		HRESULT UpdateTransformBuffer(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera);
+		HRESULT UpdateTransformBuffer(ID3D11DeviceContext* g_context, ID3D11Device* g_device);
 	public:
 		ObjectRegistry GetRegistry() override;
 	};

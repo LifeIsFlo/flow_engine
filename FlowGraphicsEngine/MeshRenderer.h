@@ -11,7 +11,7 @@ namespace FlowEngineDX11
 		Mesh* mesh = nullptr;
 		Sprite* sprite = nullptr;
 	protected:
-		void Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera) override;
+		void Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device) override;
 	public:
 		HRESULT CreateResources(ID3D11DeviceContext* g_context, ID3D11Device* g_device) override;
 	};

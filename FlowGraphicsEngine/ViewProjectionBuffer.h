@@ -5,7 +5,7 @@
 
 namespace FlowEngineDX11
 {
-	struct CameraBuffer
+	struct ViewProjectionBuffer
 	{
 		DirectX::XMFLOAT4X4 view;
 		DirectX::XMFLOAT4X4 projection;

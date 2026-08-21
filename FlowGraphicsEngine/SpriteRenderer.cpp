@@ -23,14 +23,14 @@ HRESULT FlowEngineDX11::SpriteRenderer::CreateResources(ID3D11DeviceContext* g_c
 	};
 	*/
 
-	hr = CreateBuffers(g_device);
+	hr = CreateBuffers(g_device, g_context);
 	if (FAILED(hr)) return hr;
 
 
 	return S_OK;
 }
 
-void FlowEngineDX11::SpriteRenderer::Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device, Camera* camera)
+void FlowEngineDX11::SpriteRenderer::Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device)
 {
 	g_context->PSSetShaderResources(0, 1, sprite->GetTextureResourceAddress());
 	g_context->DrawIndexed(6, 0, 0);

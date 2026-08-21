@@ -2,7 +2,15 @@
 #include "Transform.h"
 #include <DirectXMathMatrix.inl>
 
-#include "CameraBuffer.h"
+#include "ViewProjectionBuffer.h"
+
+FlowEngineDX11::Camera::~Camera()
+{
+	if (cameraBuffer) {
+		cameraBuffer->Release();
+		cameraBuffer = nullptr;
+	}
+}
 
 HRESULT FlowEngineDX11::Camera::CreateViewport()
 {
@@ -15,39 +23,41 @@ D3D11_VIEWPORT* FlowEngineDX11::Camera::GetViewport()
 	return &m_viewport;
 }
 
-DirectX::XMMATRIX FlowEngineDX11::Camera::CreateViewProjectionMatrix()
+DirectX::XMMATRIX FlowEngineDX11::Camera::CreateViewMatrix()
 {
-	auto transformMatrix = transform->CreateMatrix();
-
 	DirectX::XMVECTOR det;
-	auto viewMatrix = DirectX::XMMatrixInverse(&det, transformMatrix);
+	return DirectX::XMMatrixInverse(&det, transform->CreateMatrix());
+}
 
+DirectX::XMMATRIX FlowEngineDX11::Camera::CreateProjectionMatrix()
+{
 	if (projectionMode == Orthographic)
 	{
 		auto projectionMatrix = DirectX::XMMatrixOrthographicLH(viewWidth, viewHeight, 0.0f, farZ);
 
-		return viewMatrix * projectionMatrix;
+		return projectionMatrix;
 	}
 	if (projectionMode == Perspective)
 	{
 		auto projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(fov, viewWidth / viewHeight, nearZ, farZ);
-		
-		return viewMatrix * projectionMatrix;
-	}
 
+		return projectionMatrix;
+	}
 	return DirectX::XMMatrixIdentity();
 }
 
-HRESULT FlowEngineDX11::Camera::CreateBuffers(ID3D11Device* g_device)
+HRESULT FlowEngineDX11::Camera::CreateBuffers(ID3D11Device* g_device, ID3D11DeviceContext* g_context)
 {
-	D3D11_BUFFER_DESC transformBufferDesc{};
-	transformBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	transformBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	transformBufferDesc.ByteWidth = sizeof(CameraBuffer);
-	transformBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	D3D11_BUFFER_DESC cameraBufferDesc{};
+	cameraBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cameraBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cameraBufferDesc.ByteWidth = sizeof(ViewProjectionBuffer);
+	cameraBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
-	HRESULT hr = g_device->CreateBuffer(&transformBufferDesc, nullptr, &transformBuffer);
+	HRESULT hr = g_device->CreateBuffer(&cameraBufferDesc, nullptr, &cameraBuffer);
 	if (FAILED(hr)) return hr;
+
+	g_context->VSSetConstantBuffers(1, 1, &cameraBuffer);
 
 	return S_OK;
 }
@@ -55,16 +65,29 @@ HRESULT FlowEngineDX11::Camera::CreateBuffers(ID3D11Device* g_device)
 HRESULT FlowEngineDX11::Camera::UpdateBuffers(ID3D11DeviceContext* g_context)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedCamera;
-	HRESULT hr = g_context->Map(transformBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedTransform);
+	HRESULT hr = g_context->Map(cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedCamera);
 
 	if (SUCCEEDED(hr)) {
-		auto transformMatrix = CreateGPUMatrix(camera);
+		DirectX::XMFLOAT4X4 viewMatrix;
+		DirectX::XMFLOAT4X4 projectionMatrix;
+		DirectX::XMStoreFloat4x4(
+			&viewMatrix,
+			DirectX::XMMatrixTranspose(CreateViewMatrix())
+		);
 
-		memcpy(mappedTransform.pData, &transformMatrix, sizeof(transformMatrix));
+		DirectX::XMStoreFloat4x4(
+			&projectionMatrix,
+			DirectX::XMMatrixTranspose(CreateProjectionMatrix())
+		);
+		ViewProjectionBuffer cameraMatrix = {viewMatrix, projectionMatrix};
 
-		g_context->Unmap(transformBuffer, 0);
+		memcpy(mappedCamera.pData, &cameraMatrix, sizeof(cameraMatrix));
+
+		g_context->Unmap(cameraBuffer, 0);
 	}
 	else return hr;
+
+	return S_OK;
 }
 
 FlowEngineDX11::ObjectRegistry FlowEngineDX11::Camera::GetRegistry()

@@ -93,16 +93,18 @@ HRESULT FlowEngineDX11::DX11Protocol::CreateResources()
     {
         hr = renderer->CreateResources(g_context, g_device);
         if (FAILED(hr)) return hr;
-
     }
+
+    mainCamera->CreateBuffers(g_device, g_context);
 
     D3D11_INPUT_ELEMENT_DESC ILDesc[] = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R8G8B8A8_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
-    shader = new Shader(L"PixelShader.cso", L"VertexShader.cso", ILDesc, 3);
+    shader = new Shader(L"PixelShader.cso", L"VertexShader.cso", ILDesc, 4);
 
     hr = shader->InitShader(g_device);
     if (FAILED(hr)) return hr;
@@ -261,9 +263,11 @@ void FlowEngineDX11::DX11Protocol::Render()
 {
     BeginFrame({100,100,100,255});
 
+    mainCamera->UpdateBuffers(g_context);
+
     for (Renderer* renderer : renderers)
     {
-        renderer->UpdateAndRender(g_context, g_device, mainCamera);
+        renderer->UpdateAndRender(g_context, g_device);
     }
 
     EndFrame();

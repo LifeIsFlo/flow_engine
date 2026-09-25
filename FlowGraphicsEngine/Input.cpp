@@ -81,7 +81,7 @@ void FlowEngineDX11::Input::Update()
 
 HRESULT FlowEngineDX11::Input::UpdateMouse()
 {
-    DIMOUSESTATE mouseState;
+    DIMOUSESTATE mouseState{};
     HRESULT hr = g_pMouseDevice->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mouseState);
     if (FAILED(hr)) return hr;
 
@@ -101,7 +101,7 @@ HRESULT FlowEngineDX11::Input::UpdateMouse()
 
 HRESULT FlowEngineDX11::Input::UpdateKeyboard()
 {
-    DIKEYBOARDSTATE keyboardState;
+    DIKEYBOARDSTATE keyboardState{};
     HRESULT hr = g_pKeyboardDevice->GetDeviceState(sizeof(DIKEYBOARDSTATE), &keyboardState);
     if (FAILED(hr)) return hr;
 
@@ -126,21 +126,22 @@ HRESULT FlowEngineDX11::Input::UpdateKeyboard()
     return S_OK;
 }
 
-bool FlowEngineDX11::Input::GetKey(const Keys key) {
+bool FlowEngineDX11::Input::GetKey(const Keys& key)
+{
 	return std::ranges::find(keysPressed.begin(), keysPressed.end(), key) != keysPressed.end();
 }
 
-bool FlowEngineDX11::Input::GetKeyDown(const Keys key)
+bool FlowEngineDX11::Input::GetKeyDown(const Keys& key)
 {
 	return std::ranges::find(keysDownThisFrame.begin(), keysDownThisFrame.end(), key) != keysDownThisFrame.end();
 }
 
-bool FlowEngineDX11::Input::GetKeyUp(const Keys key)
+bool FlowEngineDX11::Input::GetKeyUp(const Keys& key)
 {
 	return std::ranges::find(keysUpThisFrame.begin(), keysUpThisFrame.end(), key) != keysUpThisFrame.end();
 }
 
-bool FlowEngineDX11::Input::GetMouseDown(int key)
+bool FlowEngineDX11::Input::GetMouseDown(const int& key)
 {
     switch (key)
     {

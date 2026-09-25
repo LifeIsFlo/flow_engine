@@ -33,10 +33,10 @@ namespace FlowEngineDX11 {
 		static void Update();
 		static HRESULT UpdateMouse();
 		static HRESULT UpdateKeyboard();
-		static bool GetKey(Keys key);
-		static bool GetKeyDown(Keys key);
-		static bool GetKeyUp(Keys key);
-		static bool GetMouseDown(int key);
+		static bool GetKey(const Keys& key);
+		static bool GetKeyDown(const Keys& key);
+		static bool GetKeyUp(const Keys& key);
+		static bool GetMouseDown(const int& key);
 		static Vector2 GetMouseDelta();
 		static Vector2 GetMousePosition();
 		static float GetMouseScroll();

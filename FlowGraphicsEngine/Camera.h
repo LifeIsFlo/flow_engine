@@ -3,14 +3,14 @@
 #include <DirectXMath.h>
 
 #include "Component.h"
+#include "Color.h"
 
 namespace FlowEngineDX11
 {
-	class Camera :
-		public Component
+	class Camera : public Component
 	{
 	public:
-		enum ProjectionMode: uint8_t { Perspective, Orthographic };
+		enum ProjectionMode : uint8_t { Perspective, Orthographic };
 		float fov = 45;
 		float offsetX = 0;
 		float offsetY = 0;
@@ -18,18 +18,22 @@ namespace FlowEngineDX11
 		float viewWidth = 800;
 		float nearZ = 0.1f;
 		float farZ = 1000.0f;
-		ProjectionMode projectionMode = Orthographic;
-		ID3D11Buffer* cameraBuffer = nullptr;
+		Color backgroundColor{};
+		ProjectionMode projectionMode = Perspective;
 	private:
+		ID3D11Buffer* cameraBuffer = nullptr;
 		D3D11_VIEWPORT m_viewport = {};
 	public:
-		~Camera();
-		HRESULT CreateViewport();
-		D3D11_VIEWPORT* GetViewport();
+		~Camera() override;
 		DirectX::XMMATRIX CreateViewMatrix();
 		DirectX::XMMATRIX CreateProjectionMatrix();
-		HRESULT CreateBuffers(ID3D11Device* g_device, ID3D11DeviceContext* g_context);
-		HRESULT UpdateBuffers(ID3D11DeviceContext* g_context);
+		HRESULT CreateBuffers(const DX11Protocol* dx11_protocol);
+		HRESULT UpdateBuffers(const DX11Protocol* dx11_protocol);
+
+		void ApplyChanges(DX11Protocol* dx11_protocol);
+
+		D3D11_VIEWPORT* GetViewport();
+
 		ObjectRegistry GetRegistry() override;
 	};
 }

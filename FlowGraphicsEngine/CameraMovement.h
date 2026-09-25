@@ -3,6 +3,7 @@
 
 class CameraMovement : public FlowEngineDX11::Behaviour
 {
+public:
 	void Update() override;
 };
 

@@ -6,10 +6,13 @@ namespace FlowEngineDX11
 {
 	class Behaviour : public Component
 	{
+		bool m_enabled = true;
 	public:
-		bool enabled = true;
 		virtual void Update() {}
 		virtual void Start() {}
+		virtual void OnEnable() {}
+		virtual void OnDisable() {}
+		virtual void SetEnabled(bool enabled);
 		ObjectRegistry GetRegistry() override;
 	};
 }

@@ -1,11 +1,10 @@
 #include "CameraMovement.h"
 
-#include <numbers>
-
 #include "Console.hpp"
 #include "GameObject.h"
 #include "Input.h"
 #include "Time.h"
+#include "Camera.h"
 #include "Transform.h"
 #include "Vector3.h"
 #include "Vector2.h"
@@ -15,6 +14,9 @@ void CameraMovement::Update()
 	if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::R))
 	{
 		transform->rotation = FlowEngineDX11::Vector3::ZERO;
+		if (gameObject->GetComponent<FlowEngineDX11::Camera>()->projectionMode == FlowEngineDX11::Camera::Orthographic) {
+			transform->position = FlowEngineDX11::Vector3::ZERO;
+		}
 	}
 
 	if (FlowEngineDX11::Input::GetMouseDown(1)) {
@@ -32,7 +34,7 @@ void CameraMovement::Update()
 
 		if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::SHIFT))
 		{
-			speed = 0.02;
+			speed = 0.1f;
 		}
 
 		if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::A)) {

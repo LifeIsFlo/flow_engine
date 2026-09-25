@@ -40,4 +40,17 @@ void PlayerMovement::Update()
 	{
 		transform->rotation.y += speed * FlowEngineDX11::Time::deltaTime;
 	}
+
+	if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::LEFT)) {
+		transform->position.x -= speed * FlowEngineDX11::Time::deltaTime;
+	}
+	if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::RIGHT)) {
+		transform->position.x += speed * FlowEngineDX11::Time::deltaTime;
+	}
+	if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::UP)) {
+		transform->position.z += speed * FlowEngineDX11::Time::deltaTime;
+	}
+	if (FlowEngineDX11::Input::GetKey(FlowEngineDX11::Keys::DOWN)) {
+		transform->position.z -= speed * FlowEngineDX11::Time::deltaTime;
+	}
 }

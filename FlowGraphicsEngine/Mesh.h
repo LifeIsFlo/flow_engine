@@ -17,7 +17,7 @@ namespace FlowEngineDX11
 	public:
 		Mesh(std::span<const unsigned int> indices, std::span<const Vertex> vertices);
 		~Mesh() override;
-		HRESULT CreateBuffers(ID3D11Device* g_device);
+		HRESULT CreateBuffers(const DX11Protocol* dx11_protocol);
 		ID3D11Buffer* GetIndexBuffer();
 		ID3D11Buffer* GetVertexBuffer();
 		ID3D11Buffer** GetIndexBufferAddress();

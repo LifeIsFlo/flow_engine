@@ -9,8 +9,6 @@
 #include <vector>
 #include <string>
 
-#include "Console.hpp"
-
 const std::string FlowEngineDX11::ObjLoader::POS = "v";
 const std::string FlowEngineDX11::ObjLoader::TEX = "vt";
 const std::string FlowEngineDX11::ObjLoader::NOR = "vn";
@@ -19,8 +17,10 @@ const std::string FlowEngineDX11::ObjLoader::OBJ = "o";
 const std::string FlowEngineDX11::ObjLoader::FACE = "f";
 const std::string FlowEngineDX11::ObjLoader::SMOOTHING = "s";
 
-void FlowEngineDX11::ObjLoader::LoadModel(std::ifstream& fileStream, std::map<std::string, std::unique_ptr<Model>>* modelsOut, const std::string& assetLocation)
+void FlowEngineDX11::ObjLoader::LoadModel(const std::string& assetLocation, std::map<std::string, std::unique_ptr<Model>>& modelsOut)
 {
+    std::ifstream fileStream(assetLocation);
+
     bool canStillRun = true;
 
     unsigned int addToVertexIndex = 0;
@@ -92,13 +92,15 @@ void FlowEngineDX11::ObjLoader::LoadModel(std::ifstream& fileStream, std::map<st
                     int uvIndex = std::stoi(sep[1]) - addToTextureIndex - 1;
                     int normalIndex = std::stoi(sep[2]) - addToNormalIndex - 1;
 
-                    vertices.push_back({ positions[positionIndex], normals[normalIndex], textureCoords[uvIndex], Color(150,150,150,255)});
+                    vertices.push_back({ positions[positionIndex], normals[normalIndex], textureCoords[uvIndex], Color()});
 
                     indices.push_back(indexCount);
                     indexCount++;
                 }
                 break;
             }
+
+
         }
         if (!meshFinished) meshName = lastName;
         model->AddMesh(meshName, indices, vertices);
@@ -107,7 +109,7 @@ void FlowEngineDX11::ObjLoader::LoadModel(std::ifstream& fileStream, std::map<st
         addToTextureIndex += textureCoords.size();
         addToNormalIndex += normals.size();
     }
-    (*modelsOut)[assetLocation] = std::move(model);
+    modelsOut[assetLocation] = std::move(model);
 }
 
 HRESULT FlowEngineDX11::ObjLoader::CompileLine(const std::string& line, ObjFileCommand& obj_file_command, Vector3& value, std::vector<std::string>& paramsOut)
@@ -165,5 +167,5 @@ HRESULT FlowEngineDX11::ObjLoader::CompileLine(const std::string& line, ObjFileC
 
 		return S_OK;
     }
-    return -1;
+    return E_FAIL;
 }

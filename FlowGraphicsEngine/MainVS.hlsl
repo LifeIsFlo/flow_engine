@@ -13,17 +13,21 @@ struct PSInput
     float2 uv : TEXCOORD0;
     float4 color : COLOR;
     float3 localPos : POSITION;
+    float3 cameraPos : CAMERA_POS;
 };
 
 cbuffer Transform : register(b0)
 {
     matrix transform;
+    matrix rotation;
 };
 
 cbuffer Camera : register(b1)
 {
     matrix view;
     matrix projection;
+    float3 cameraPos;
+    float padding;
 };
 
 PSInput main(VSInput input)
@@ -36,9 +40,10 @@ PSInput main(VSInput input)
     output.position = mul(float4(input.position, 1), clipSpace);
 
     output.uv = input.uv;
-    output.normal = input.normal;
+    output.normal = mul(float4(input.normal, 0), rotation);
     output.localPos = mul(float4(input.position, 1), transform);
     output.color = input.color;
+    output.cameraPos = cameraPos;
 
     return output;
 }

@@ -9,12 +9,13 @@ namespace FlowEngineDX11
 	{
 		ID3D11Texture2D* texture2d = nullptr;
 		ID3D11ShaderResourceView* texture2dSRV = nullptr;
+		std::vector<Color> _colorData = {};
+		UINT _width = 0;
+		UINT _height = 0;
 	public:
-		UINT artificialTextureWidth = 10;
-		UINT artificialTextureHeight = 10;
-		Sprite(UINT artificialWidth, UINT artificialHeight);
+		Sprite(std::vector<Color>& colorData, UINT width, UINT height) : _colorData(colorData), _height(height), _width(width) {}
 		~Sprite();
-		HRESULT CreateTexture(ID3D11Device* g_device);
+		HRESULT CreateTexture(const DX11Protocol* dx11_protocol);
 		ID3D11ShaderResourceView* GetTextureResource()
 		{
 			return texture2dSRV;
@@ -30,7 +31,7 @@ namespace FlowEngineDX11
 				texture2d->GetDesc(&desc);
 				return desc.Width;
 			}
-			return artificialTextureWidth;
+			return _width;
 		}
 
 		UINT GetHeight()
@@ -40,9 +41,7 @@ namespace FlowEngineDX11
 				texture2d->GetDesc(&desc);
 				return desc.Height;
 			}
-			return artificialTextureHeight;
+			return _height;
 		}
-
-		void GetArtificialColorData(std::vector<Color>* colors);
 	};
 }

@@ -1,4 +1,6 @@
 #include "Mesh.h"
+
+#include "DX11Protocol.h"
 #include "Vertex.h"
 
 FlowEngineDX11::Mesh::Mesh(std::span<const unsigned int> indices, std::span<const Vertex> vertices)
@@ -22,8 +24,9 @@ FlowEngineDX11::Mesh::~Mesh()
 	}
 }
 
-HRESULT FlowEngineDX11::Mesh::CreateBuffers(ID3D11Device* g_device)
+HRESULT FlowEngineDX11::Mesh::CreateBuffers(const DX11Protocol* dx11_protocol)
 {
+	auto g_device = dx11_protocol->GetDevice();
 	D3D11_BUFFER_DESC vertexBufferDesc{};
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	vertexBufferDesc.ByteWidth = m_vertices.size() * sizeof(Vertex);

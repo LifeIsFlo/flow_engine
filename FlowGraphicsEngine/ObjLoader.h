@@ -20,7 +20,7 @@ namespace FlowEngineDX11 {
 			COMMENT
 		};
 
-		static void LoadModel(std::ifstream& fileStream, std::map<std::string, std::unique_ptr<Model>>* modelsOut, const std::string& assetLocation);
+		static void LoadModel(const std::string& assetLocation, std::map<std::string, std::unique_ptr<Model>>& modelsOut);
 		static HRESULT CompileLine(const std::string& line, ObjFileCommand& obj_file_command, Vector3& value, std::vector<std::string>& paramsOut);
 
 		static const std::string POS;

@@ -6,7 +6,9 @@
 namespace FlowEngineDX11 {
 	struct Vector3
 	{
-		float x = 0, y = 0, z = 0;
+		float x = 0;
+		float y = 0;
+		float z = 0;
 
 		constexpr Vector3() noexcept = default;
 

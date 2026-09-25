@@ -33,5 +33,31 @@ namespace FlowEngineDX11 {
 			this->b = b;
 			this->a = a;
 		}
+
+
+		Color operator/(const float& divide) const 
+		{
+			auto retR = static_cast<uint8_t>(static_cast<float>(r) / divide);
+			auto retG = static_cast<uint8_t>(static_cast<float>(g) / divide);
+			auto retB = static_cast<uint8_t>(static_cast<float>(b) / divide);
+			auto retA = static_cast<uint8_t>(static_cast<float>(a) / divide);
+
+			return { retR, retG, retB, retA };
+		}
+	};
+
+	struct GPUColor {
+		float r;
+		float g;
+		float b;
+		float a;
+
+		GPUColor(const Color& color = Color()) {
+			auto floats = color.ToFloatArray();
+			r = floats[0];
+			g = floats[1];
+			b = floats[2];
+			a = floats[3];
+		}
 	};
 }

@@ -4,7 +4,7 @@
 FlowEngineDX11::Object::Object() = default;
 FlowEngineDX11::Object::~Object()
 {
-	std::cout << "object released";
+	std::cout << name + " released\n";
 };
 
 void FlowEngineDX11::Object::Destroy(Object* objToDestroy) {

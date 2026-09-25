@@ -5,6 +5,7 @@
 #include "Transform.h"
 #include "Camera.h"
 #include "DirectXMath.h"
+#include "TransformBuffer.h"
 
 FlowEngineDX11::Renderer::~Renderer()
 {
@@ -15,12 +16,13 @@ FlowEngineDX11::Renderer::~Renderer()
 	}
 }
 
-HRESULT FlowEngineDX11::Renderer::CreateBuffers(ID3D11Device* g_device, ID3D11DeviceContext* g_context)
+HRESULT FlowEngineDX11::Renderer::CreateBuffers(const DX11Protocol* dx11_protocol)
 {
+	auto g_device = dx11_protocol->GetDevice();
 	D3D11_BUFFER_DESC transformBufferDesc{};
 	transformBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	transformBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	transformBufferDesc.ByteWidth = sizeof(DirectX::XMFLOAT4X4);
+	transformBufferDesc.ByteWidth = sizeof(TransformBuffer);
 	transformBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
 	HRESULT hr = g_device->CreateBuffer(&transformBufferDesc, nullptr, &transformBuffer);
@@ -29,25 +31,35 @@ HRESULT FlowEngineDX11::Renderer::CreateBuffers(ID3D11Device* g_device, ID3D11De
 	return S_OK;
 }
 
-void FlowEngineDX11::Renderer::UpdateAndRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device)
+void FlowEngineDX11::Renderer::UpdateBuffers(const DX11Protocol* dx11_protocol)
 {
-	UpdateTransformBuffer(g_context, g_device);
-	g_context->VSSetConstantBuffers(0, 1, &transformBuffer);
-	Render(g_context, g_device);
+	UpdateTransformBuffer(dx11_protocol);
 }
 
-HRESULT FlowEngineDX11::Renderer::UpdateTransformBuffer(ID3D11DeviceContext* g_context, ID3D11Device* g_device)
+HRESULT FlowEngineDX11::Renderer::UpdateTransformBuffer(const DX11Protocol* dx11_protocol)
 {
+	auto g_context = dx11_protocol->GetContext();
 	D3D11_MAPPED_SUBRESOURCE mappedTransform;
 	HRESULT hr = g_context->Map(transformBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedTransform);
 
 	if (SUCCEEDED(hr)) {
 		DirectX::XMFLOAT4X4 transformMatrix;
+		DirectX::XMFLOAT4X4 rotationMatrix;
 		DirectX::XMStoreFloat4x4(&transformMatrix, DirectX::XMMatrixTranspose(
 			transform->CreateMatrix()
 		));
+		auto xRot = DirectX::XMMatrixRotationX(transform->rotation.x);
+		auto yRot = DirectX::XMMatrixRotationY(transform->rotation.y);
+		auto zRot = DirectX::XMMatrixRotationZ(transform->rotation.z);
+		DirectX::XMStoreFloat4x4(&rotationMatrix, DirectX::XMMatrixTranspose(
+			xRot * yRot * zRot
+		));
 
-		memcpy(mappedTransform.pData, &transformMatrix, sizeof(transformMatrix));
+		TransformBuffer buff{};
+		buff.rotationMatrix = rotationMatrix;
+		buff.transformMatrix = transformMatrix;
+
+		memcpy(mappedTransform.pData, &buff, sizeof(buff));
 
 		g_context->Unmap(transformBuffer, 0);
 	}

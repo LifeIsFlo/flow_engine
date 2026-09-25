@@ -8,20 +8,21 @@
 #include <random>
 #include <span>
 
-namespace FlowEngineDX11 {
+namespace FlowEngineDX11 
+{
 	class Renderer : public Component
 	{
 	protected:
 		ID3D11Buffer* transformBuffer = nullptr;
 	public:
+		bool castShadows = true;
 		~Renderer() override;
-		virtual HRESULT CreateResources(ID3D11DeviceContext* g_context, ID3D11Device* g_device) = 0;
-		HRESULT CreateBuffers(ID3D11Device* g_device, ID3D11DeviceContext* g_context);
-		void UpdateAndRender(ID3D11DeviceContext* g_context, ID3D11Device* g_device);
+		HRESULT CreateBuffers(const DX11Protocol* dx11_protocol);
+		void UpdateBuffers(const DX11Protocol* dx11_protocol);
+		virtual void PrepareMainPass(const DX11Protocol* dx11_protocol) = 0;
+		virtual void Render(const DX11Protocol* dx11_protocol) = 0;
 	protected:
-		virtual void Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device) = 0;
-	private:
-		HRESULT UpdateTransformBuffer(ID3D11DeviceContext* g_context, ID3D11Device* g_device);
+		HRESULT UpdateTransformBuffer(const DX11Protocol* dx11_protocol);
 	public:
 		ObjectRegistry GetRegistry() override;
 	};

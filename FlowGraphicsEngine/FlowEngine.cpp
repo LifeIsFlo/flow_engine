@@ -1,34 +1,48 @@
 #include "FlowEngine.h"
-#include "Color.h"
 #include "Object.h"
-#include "FWD.h"
 #include "GameObject.h"
 #include "DX11Protocol.h"
-#include <iostream>
 #include <string>
-#include <windows.h>
-#include <d3d11.h>
-#include <d3dcompiler.h>
-#include <wrl/client.h>
-#include <algorithm>
 #include "Camera.h"
 #include "Behaviour.h"
 #include "Light.h"
 #include "Input.h"
 #include "Renderer.h"
-#include <chrono>
+#include "LightingProtocol.h"
+#include "RenderProtocol.h"
+#include "Console.hpp"
+#include "BehaviourProtocol.h"
+#include "CameraManager.h"
+#include "AssetDatabase.h"
 #include "Time.h"
 
-bool FlowEngineDX11::FlowEngine::Tick() {
+bool FlowEngineDX11::FlowEngine::Tick() 
+{
     Input::Update();
 
-	for (auto behaviour : behaviours)
-	{
-        behaviour->Update();
-	}
+    behaviourProtocol->Update();
 
-    dx11_protocol->Render();
+    // Rendering
+    renderProtocol->UpdateBuffers(dx11_protocol.get());
 
+    // Shadow pass
+    dx11_protocol->PrepareShadowPass();
+
+    lightingProtocol->ShadowPass(this, dx11_protocol.get());
+
+
+    // Main pass
+    dx11_protocol->PrepareMainPass();
+
+    CameraManager::UpdateBuffers(dx11_protocol.get());
+
+    lightingProtocol->MainPass(dx11_protocol.get());
+
+    renderProtocol->Render(dx11_protocol.get());
+
+    dx11_protocol->EndFrame();
+
+    // Object resolving
     ResolveDestroyedObjects();
 
     return true;
@@ -38,16 +52,22 @@ bool FlowEngineDX11::FlowEngine::AddObjectToRegistry(Object* obj)
 {
     switch (obj->GetRegistry()) {
     case ObjectRegistry::Behaviour:
-        behaviours.push_back(dynamic_cast<Behaviour*>(obj));
+        behaviourProtocol->AddBehaviour(dynamic_cast<Behaviour*>(obj));
         return true;
-    case ObjectRegistry::Renderer:
-        dx11_protocol->AddRenderer(dynamic_cast<Renderer*>(obj));
+    case ObjectRegistry::Renderer: {
+        auto renderer = dynamic_cast<Renderer*>(obj);
+        if (renderer->castShadows) lightingProtocol->AddShadow(renderer);
+        renderProtocol->AddRenderer(renderer);
         return true;
+    }
     case ObjectRegistry::Camera:
-        dx11_protocol->SetCamera(dynamic_cast<Camera*>(obj));
+        CameraManager::SetActive(dynamic_cast<Camera*>(obj));
         return true;
     case ObjectRegistry::Light:
-        dx11_protocol->AddLight(dynamic_cast<Light*>(obj));
+        lightingProtocol->AddLight(dynamic_cast<Light*>(obj));
+        return true;
+    case ObjectRegistry::GameObject:
+        gameObjects.push_back(dynamic_cast<GameObject*>(obj));
         return true;
     default:
         return true;
@@ -59,20 +79,26 @@ void FlowEngineDX11::FlowEngine::RemoveObjectFromRegistry(Object* obj)
 	switch (obj->GetRegistry())
 	{
 	case ObjectRegistry::Behaviour:
-        std::erase_if(behaviours, [obj](const Behaviour* behaviour)
-        {
-                return behaviour == obj;
-        });
+        behaviourProtocol->RemoveBehaviour(dynamic_cast<Behaviour*>(obj));
         break;
-	case ObjectRegistry::Renderer:
-        dx11_protocol->RemoveRenderer(dynamic_cast<Renderer*>(obj));
+    case ObjectRegistry::Renderer: {
+        auto renderer = dynamic_cast<Renderer*>(obj);
+        lightingProtocol->RemoveShadow(renderer);
+        renderProtocol->RemoveRenderer(renderer);
         break;
+    }
 	case ObjectRegistry::Light:
-        dx11_protocol->RemoveLight(dynamic_cast<Light*>(obj));
+        lightingProtocol->RemoveLight(dynamic_cast<Light*>(obj));
+        break;
+    case ObjectRegistry::GameObject:
+        std::erase_if(gameObjects, [obj](const GameObject* go) 
+            {
+                return obj == go;
+            });
         break;
 	case ObjectRegistry::Camera:
         Camera* camera = dynamic_cast<Camera*>(obj);
-        if (dx11_protocol->isMainCamera(camera)) dx11_protocol->SetCamera(nullptr);
+        if (CameraManager::isActiveCamera(camera)) CameraManager::SetActive(nullptr);
         break;
 	}
 }
@@ -91,9 +117,9 @@ void FlowEngineDX11::FlowEngine::ResolveDestroyedObjects()
 	}
 
     std::erase_if(objects, [](const std::unique_ptr<Object>& element)
-        {
-            return element->isDead();
-        });
+    {
+        return element->isDead();
+    });
 
     if (deadObjects > 0) {
         objects.shrink_to_fit();
@@ -102,36 +128,116 @@ void FlowEngineDX11::FlowEngine::ResolveDestroyedObjects()
 
 void FlowEngineDX11::FlowEngine::StartGameLoop()
 {
-    for (auto behaviour : behaviours)
-    {
-        behaviour->Start();
-    }
     MSG msg = {};
-    Time::Init();
-    while (true) {
+    running = true;
+    while (running) 
+    {
         Time::BeginFrame();
         if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
 
-            if (msg.message == WM_QUIT) break;
+            if (msg.message == WM_QUIT) running = false;
         }
-
+        if (Input::GetKey(Keys::ESCAPE) || requestExit) running = false;
         Tick();
         Time::EndFrame();
     }
 }
 
-bool FlowEngineDX11::FlowEngine::Run() {
-    if (!dx11_protocol->Init()) return false;
+void FlowEngineDX11::FlowEngine::CleanUp()
+{
+    ClearState();
+    CameraManager::ClearState();
+    Input::CleanUp();
+    AssetDatabase::CleanUp();
+    dx11_protocol->CleanUp();
+}
+
+void FlowEngineDX11::FlowEngine::ClearState()
+{
+    for (auto go : gameObjects)
+    {
+        go->Destroy();
+    }
+    ResolveDestroyedObjects();
+    objects.clear();
+    objects.shrink_to_fit();
+    gameObjects.clear();
+    gameObjects.shrink_to_fit();
+    flowio::Console::WriteLine("objects in vector: " + std::to_string(objects.size()));
+    objectsDestroyed = true;
+
+    lightingProtocol->ClearState();
+    renderProtocol->ClearState();
+    behaviourProtocol->ClearState();
+    dx11_protocol->ClearState();
+    CameraManager::ClearState();
+    AssetDatabase::CleanUp();
+}
+
+void FlowEngineDX11::FlowEngine::RequestExit()
+{
+    requestExit = true;
+}
+
+HRESULT FlowEngineDX11::FlowEngine::CreateBuffers()
+{
+    behaviourProtocol->Start();
+
+    return S_OK;
+}
+
+HRESULT FlowEngineDX11::FlowEngine::CreateResources()
+{
+    HRESULT hr = dx11_protocol->CreateResources();
+    if (FAILED(hr)) return hr;
+    hr = CameraManager::CreateBuffers(dx11_protocol.get());
+    if (FAILED(hr)) return hr;
+    hr = renderProtocol->CreateResources(dx11_protocol.get());
+    if (FAILED(hr)) return hr;
+    hr = lightingProtocol->CreateResources(dx11_protocol.get());
+    if (FAILED(hr)) return hr;
+    hr = AssetDatabase::CreateBuffers(dx11_protocol.get());
+    if (FAILED(hr)) return hr;
+    return S_OK;
+}
+
+HRESULT FlowEngineDX11::FlowEngine::Run() 
+{
+    Camera* activeCam = CameraManager::GetActive();
+
+    if (!activeCam) return E_FAIL;
+
+    Time::Init();
+
+    HRESULT hr = dx11_protocol->Init(&hwnd, &hInstance);
+    if (FAILED(hr)) {
+        MessageBox(hwnd, L"Failed to initialize DirectX 11", L"Error", MB_OK);
+        CleanUp();
+        return hr;
+    }
+
+    hr = CreateResources();
+    if (FAILED(hr))
+    {
+        MessageBox(hwnd, L"Couldn't make the proper resources", L"Error", MB_OK);
+        CleanUp();
+        return hr;
+    }
+
+    Input::Init(hInstance, hwnd);
 
     StartGameLoop();
 
-    dx11_protocol->CleanUp();
+    CleanUp();
 
-    return true;
+    return S_OK;
 }
 
-FlowEngineDX11::FlowEngine::FlowEngine(const size_t& height, const size_t& width, const bool& fullScreen, const std::string& title, const bool& vSync) {
-    this->dx11_protocol = std::make_unique<DX11Protocol>(height, width, title, fullScreen, vSync);
+FlowEngineDX11::FlowEngine::FlowEngine(const size_t& height, const size_t& width, const std::string& title, const bool& vSync) {
+    this->dx11_protocol = std::make_unique<DX11Protocol>(height, width, title, vSync);
+    this->behaviourProtocol = std::make_unique<BehaviourProtocol>();
+    this->renderProtocol = std::make_unique<RenderProtocol>();
+    this->lightingProtocol = std::make_unique<LightingProtocol>();
 }

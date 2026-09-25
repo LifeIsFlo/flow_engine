@@ -55,48 +55,32 @@ FlowEngineDX11::Vector3 FlowEngineDX11::Transform::GetDown()
 	return GetUp() * -1;
 }
 
-DirectX::XMMATRIX FlowEngineDX11::Transform::CreateMatrix()
+DirectX::XMMATRIX FlowEngineDX11::Transform::CreateMatrix(const Vector3& offPos, const Vector3& offRot, const Vector3& offScale)
 {
 	auto scaleMatrix =
 		DirectX::XMMatrixScaling(
-			scale.x,
-			scale.y,
-			scale.z);
+			scale.x + offScale.x,
+			scale.y + offScale.y,
+			scale.z + offScale.z);
 
-	auto xRot = DirectX::XMMatrixRotationX(rotation.x);
-	auto yRot = DirectX::XMMatrixRotationY(rotation.y);
-	auto zRot = DirectX::XMMatrixRotationZ(rotation.z);
+	auto xRot = DirectX::XMMatrixRotationX(rotation.x + offRot.x);
+	auto yRot = DirectX::XMMatrixRotationY(rotation.y + offRot.y);
+	auto zRot = DirectX::XMMatrixRotationZ(rotation.z + offRot.z);
 
 	auto rot = xRot * yRot * zRot;
 
 	auto positionMatrix =
 		DirectX::XMMatrixTranslation(
-			position.x,
-			position.y,
-			position.z);
+			position.x + offPos.x,
+			position.y + offPos.y,
+			position.z + offPos.z);
 
 	return scaleMatrix * rot * positionMatrix;
 }
 
-DirectX::XMMATRIX FlowEngineDX11::Transform::CreateInverseMatrix()
+DirectX::XMMATRIX FlowEngineDX11::Transform::CreateInverseMatrix(const Vector3& offPos, const Vector3& offRot, const Vector3& offScale)
 {
-	auto scaleMatrix =
-		DirectX::XMMatrixScaling(
-			-scale.x,
-			-scale.y,
-			-scale.z);
+	DirectX::XMVECTOR det;
 
-	auto xRot = DirectX::XMMatrixRotationX(-rotation.x);
-	auto yRot = DirectX::XMMatrixRotationY(-rotation.y);
-	auto zRot = DirectX::XMMatrixRotationZ(-rotation.z);
-
-	auto rot = xRot * yRot * zRot;
-
-	auto positionMatrix =
-		DirectX::XMMatrixTranslation(
-			-position.x,
-			-position.y,
-			-position.z);
-
-	return scaleMatrix * rot * positionMatrix;
+	return DirectX::XMMatrixInverse(&det, CreateMatrix(offPos, offRot, offScale));
 }

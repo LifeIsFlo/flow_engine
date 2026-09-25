@@ -1,7 +1,6 @@
 #pragma once
-#include <DirectXMath.h>
-
 #include "FWD.h"
+#include "Vector3.h"
 
 namespace FlowEngineDX11
 {
@@ -9,5 +8,7 @@ namespace FlowEngineDX11
 	{
 		DirectX::XMFLOAT4X4 view;
 		DirectX::XMFLOAT4X4 projection;
+		Vector3 position;
+		float padding;
 	};
 }

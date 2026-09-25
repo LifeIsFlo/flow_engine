@@ -1,129 +1,153 @@
-#include "Vector2.h"
-#include "FWD.h"
 #include "DX11Protocol.h"
 #include "Renderer.h"
-#include <d3d11.h>
-#include <d3dcompiler.h>
-#include "Shader.h"
-#include <wrl/client.h>
-
+#include "FWD.h"
+#include "VertexShader.h"
 #include "AssetDatabase.h"
+#include "Camera.h"
+#include "CameraManager.h"
+#include "PixelShader.h"
 #include "Console.hpp"
-#include "Input.h"
-// Link required DirectX libraries
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3dcompiler.lib")
+
 
 FlowEngineDX11::DX11Protocol* FlowEngineDX11::DX11Protocol::current = nullptr;
 
-FlowEngineDX11::DX11Protocol::DX11Protocol(const UINT& windowHeight, const UINT& windowWidth, const std::string& windowTitle, const bool& fullScreen, const bool& vSync)
+LRESULT CALLBACK FlowEngineDX11::DX11Protocol::WindowProcStatic(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    _renderHeight = windowHeight;
-    _renderWidth = windowWidth;
-    _windowTitle = windowTitle;
-    _fullScreen = fullScreen;
-    _vSync = vSync;
-
-    current = this;
+    return current->WindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-bool FlowEngineDX11::DX11Protocol::Init()
+LRESULT FlowEngineDX11::DX11Protocol::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+    case WM_ACTIVATEAPP:
+        if (g_swapChain) {
+            if (wParam != FALSE)
+            {
+                ApplyChanges();
+            }
+        }
+        return 0;
+    case WM_SIZE:
+        // Handle window resizing safely if initialization is finished
+        if (g_swapChain && wParam != SIZE_MINIMIZED) {
+            UINT width = LOWORD(lParam);
+            UINT height = HIWORD(lParam);
+
+            RECT rect = { 0,0,  static_cast<LONG>(width), static_cast<LONG>(height) };
+
+            GetClientRect(hwnd, &rect);
+
+            _renderHeight = rect.bottom - rect.top;
+            _renderWidth = rect.right - rect.left;
+
+            ApplyChanges();
+        }
+        return 0;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    default:
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+}
+
+HRESULT FlowEngineDX11::DX11Protocol::Init(HWND* hwnd, HINSTANCE* hInstance)
 {
-    if (!mainCamera) return false;
-    HINSTANCE hInstance = GetModuleHandle(nullptr);
+    *hInstance = GetModuleHandle(nullptr);
 
     constexpr wchar_t CLASS_NAME[] = L"DirectXEngineClass";
 
     WNDCLASSEX wc = { };
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.lpfnWndProc = WindowProcStatic;
-    wc.hInstance = hInstance;
+    wc.hInstance = *hInstance;
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 
     RegisterClassEx(&wc);
 
-    DWORD style = WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME;
+    DWORD style = WS_POPUP | WS_VISIBLE;
 
     RECT rect = {0,0, _renderWidth, _renderHeight};
     AdjustWindowRect(&rect, style, FALSE);
 
-    HWND hwnd = CreateWindowEx(
+    *hwnd = CreateWindowEx(
         0, CLASS_NAME, std::wstring(_windowTitle.begin(), _windowTitle.end()).c_str(),
         style,
         0, 0, rect.right - rect.left, rect.bottom - rect.top,
-        nullptr, nullptr, hInstance, nullptr
+        nullptr, nullptr, *hInstance, nullptr
     );
 
     if (hwnd == nullptr) {
         std::cout << "DX11Protocol Creation Failed!\n";
-        return false;
+        return E_FAIL;
     }
 
-    ShowWindow(hwnd, SW_SHOW);
+    ShowWindow(*hwnd, SW_SHOW);
 
-    HRESULT hr = InitD3D(hwnd);
+    HRESULT hr = InitD3D(*hwnd);
+    if (FAILED(hr)) return hr;
 
-    if (FAILED(hr)) {
-        MessageBox(hwnd, L"Failed to initialize DirectX 11", L"Error", MB_OK);
-        std::cout << hr;
-        return false;
-    }
+    return S_OK;
+}
 
-    hr = CreateResources();
+HRESULT FlowEngineDX11::DX11Protocol::InitD3D(HWND hwnd)
+{
+    DXGI_SWAP_CHAIN_DESC scd = {};
+    scd.BufferCount = 2;
+    scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    scd.BufferDesc.Width = _renderWidth;
+    scd.BufferDesc.Height = _renderHeight;
+    scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    scd.OutputWindow = hwnd;
+    scd.SampleDesc.Count = 1;
+    scd.Windowed = TRUE;
+    scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+    scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
-    if (FAILED(hr))
-    {
-	    MessageBox(hwnd, L"Couldn't make the proper resources", L"Error", MB_OK);
-        std::cout << hr;
-        return false;
-    }
+    D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
 
-    Input::Init(hInstance, hwnd);
+    // Create Device, Context, and Swap Chain
+    HRESULT hr = D3D11CreateDeviceAndSwapChain(
+        nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_DEBUG,
+        featureLevels, 1, D3D11_SDK_VERSION, &scd,
+        &g_swapChain, &g_device, nullptr, &g_context
+    );
+    if (FAILED(hr)) return hr;
 
-    return true;
+    ApplyChanges();
+
+    return S_OK;
 }
 
 HRESULT FlowEngineDX11::DX11Protocol::CreateResources()
 {
-    HRESULT hr;
-    for (Renderer* renderer : renderers)
+    std::vector<D3D11_INPUT_ELEMENT_DESC> ILDesc = 
     {
-        hr = renderer->CreateResources(g_context, g_device);
-        if (FAILED(hr)) return hr;
-    }
-
-    mainCamera->CreateBuffers(g_device, g_context);
-
-    D3D11_INPUT_ELEMENT_DESC ILDesc[] = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"COLOR", 0, DXGI_FORMAT_R8G8B8A8_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		{"COLOR", 0, DXGI_FORMAT_R8G8B8A8_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"CAMERA_POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
     };
 
-    shader = new Shader(L"PixelShader.cso", L"VertexShader.cso", ILDesc, 4);
-
-    hr = shader->InitShader(g_device);
-    if (FAILED(hr)) return hr;
+    vertexShader = AssetDatabase::LoadVertexShader("MainVS.cso", ILDesc);
+    pixelShader = AssetDatabase::LoadPixelShader("MainPS.cso");
 
     D3D11_SAMPLER_DESC samplerDesc = {};
-    samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     samplerDesc.MinLOD = 0;
     samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-    samplerDesc.MaxAnisotropy = 16;
 
-    hr = g_device->CreateSamplerState(&samplerDesc, &texture2dSampler);
+    HRESULT hr = g_device->CreateSamplerState(&samplerDesc, &texture2dSampler);
     if (FAILED(hr)) return hr;
 
-
     D3D11_BLEND_DESC blendDesc = {};
-    blendDesc.RenderTarget[0].BlendEnable = FALSE;                     // 4. Turn blending ON/OFF
+    blendDesc.RenderTarget[0].BlendEnable = true;                     // 4. Turn blending ON/OFF
     blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;    // 5. RGB Source multiplier
     blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;// 6. RGB Destination multiplier
     blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;       // 7. RGB Equation operator
@@ -139,12 +163,67 @@ HRESULT FlowEngineDX11::DX11Protocol::CreateResources()
     D3D11_RASTERIZER_DESC rasterizerDesc = {};
     rasterizerDesc.FillMode = D3D11_FILL_SOLID;
     rasterizerDesc.CullMode = D3D11_CULL_BACK;
-    rasterizerDesc.FrontCounterClockwise = FALSE;
-    rasterizerDesc.MultisampleEnable = TRUE;
+    rasterizerDesc.FrontCounterClockwise = false;
+    rasterizerDesc.MultisampleEnable = true;
 
     hr = g_device->CreateRasterizerState(&rasterizerDesc, &g_rasterizerState);
     if (FAILED(hr)) return hr;
 
+    D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
+    depthStencilDesc.DepthEnable = true;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+    hr = g_device->CreateDepthStencilState(&depthStencilDesc, &g_depthStencilState);
+    if (FAILED(hr)) return hr;
+
+    // Shadow pass
+
+    return S_OK;
+}
+
+HRESULT FlowEngineDX11::DX11Protocol::ApplyChanges()
+{
+    Camera* activeCamera = CameraManager::GetActive();
+
+    g_context->OMSetRenderTargets(0, nullptr, nullptr);
+
+    if (g_depthStencilView)
+    {
+        g_depthStencilView->Release();
+        g_depthStencilView = nullptr;
+    }
+
+    if (g_depthStencilBuffer)
+    {
+        g_depthStencilBuffer->Release();
+        g_depthStencilBuffer = nullptr;
+    }
+
+    if (g_renderTargetView)
+    {
+        g_renderTargetView->Release();
+        g_renderTargetView = nullptr;
+    }
+
+    if (g_backBuffer)
+    {
+        g_backBuffer->Release();
+        g_backBuffer = nullptr;
+    }
+
+    HRESULT hr = g_swapChain->ResizeBuffers(0, _renderWidth, _renderHeight, DXGI_FORMAT_UNKNOWN, 0);
+    if (FAILED(hr)) return hr;
+
+    hr = g_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&g_backBuffer));
+    if (FAILED(hr)) return hr;
+
+    hr = g_device->CreateRenderTargetView(g_backBuffer, nullptr, &g_renderTargetView);
+    if (FAILED(hr)) return hr;
+
+    activeCamera->viewHeight = _renderHeight;
+    activeCamera->viewWidth = _renderWidth;
+    activeCamera->ApplyChanges(this);
 
     D3D11_TEXTURE2D_DESC depthStencilViewTextureDesc = {};
     depthStencilViewTextureDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -165,192 +244,51 @@ HRESULT FlowEngineDX11::DX11Protocol::CreateResources()
     hr = g_device->CreateDepthStencilView(g_depthStencilBuffer, nullptr, &g_depthStencilView);
     if (FAILED(hr)) return hr;
 
-
-    D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
-    depthStencilDesc.DepthEnable = true;
-    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-
-    hr = g_device->CreateDepthStencilState(&depthStencilDesc, &g_depthStencilState);
-    if (FAILED(hr)) return hr;
-
     return S_OK;
 }
 
-HRESULT FlowEngineDX11::DX11Protocol::InitD3D(HWND hwnd)
+void FlowEngineDX11::DX11Protocol::ClearState()
 {
-    DXGI_SWAP_CHAIN_DESC scd = {};
-    scd.BufferCount = 1;                                    // One back buffer
-    scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;     // Color format
-    scd.BufferDesc.Width = _renderWidth;                    // Match client width
-    scd.BufferDesc.Height = _renderHeight;                  // Match client height
-    scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;      // Pipeline destination
-    scd.OutputWindow = hwnd;                                // Link to our Win32 window
-    scd.SampleDesc.Count = 1;                               // No multi-sampling
-    scd.Windowed = !_fullScreen;                            // Windowed mode
-    scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-
-    D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
-
-    // Create Device, Context, and Swap Chain
-    HRESULT hr = D3D11CreateDeviceAndSwapChain(
-        nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0,
-        featureLevels, 1, D3D11_SDK_VERSION, &scd,
-        &g_swapChain, &g_device, nullptr, &g_context
-    );
-    if (FAILED(hr)) return hr;
-
-    IDXGIFactory* factory = nullptr;
-    hr = g_swapChain->GetParent(__uuidof(IDXGIFactory), (void**)&factory);
-    if (SUCCEEDED(hr)) {
-        // Stops DXGI from changing your window styles or states automatically
-        factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_WINDOW_CHANGES);
-        factory->Release();
-        factory = nullptr;
-    }
-    else return hr;
-
-    ApplyChanges();
-
-    return S_OK;
-}
-
-LRESULT CALLBACK FlowEngineDX11::DX11Protocol::WindowProcStatic(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return current->WindowProc(hwnd, uMsg, wParam, lParam);
-}
-
-LRESULT FlowEngineDX11::DX11Protocol::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-    case WM_ACTIVATEAPP:
-        if (g_swapChain) {
-            if (wParam != FALSE)
-            {
-                ApplyChanges();
-            }
-            else
-            {
-
-            }
-        }
-        return 0;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
-
-    case WM_SIZE:
-        // Handle window resizing safely if initialization is finished
-        if (g_swapChain && wParam != SIZE_MINIMIZED) {
-            UINT width = LOWORD(lParam);
-            UINT height = HIWORD(lParam);
-
-            RECT rect = { 0,0,  static_cast<LONG>(width), static_cast<LONG>(height) };
-
-            GetClientRect(hwnd, &rect);
-
-            _renderHeight = rect.bottom - rect.top;
-            _renderWidth = rect.right - rect.left;
-
-            ApplyChanges();
-        }
-        return 0;
-    default:
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
-    }
-}
-
-void FlowEngineDX11::DX11Protocol::Render()
-{
-    BeginFrame({100,100,100,255});
-
-    mainCamera->UpdateBuffers(g_context);
-
-    for (Renderer* renderer : renderers)
-    {
-        renderer->UpdateAndRender(g_context, g_device);
-    }
-
-    EndFrame();
-}
-
-HRESULT FlowEngineDX11::DX11Protocol::ApplyChanges()
-{
-    g_context->OMSetRenderTargets(0, nullptr, nullptr);
-    if (g_renderTargetView)
-    {
-        g_renderTargetView->Release();
-        g_renderTargetView = nullptr;
-    }
-
-    if (g_backBuffer)
-    {
-        g_backBuffer->Release();
-        g_backBuffer = nullptr;
-    }
-	
-    g_swapChain->SetFullscreenState(_fullScreen, nullptr);
-    HRESULT hr = g_swapChain->ResizeBuffers(0, _renderWidth, _renderHeight, DXGI_FORMAT_UNKNOWN, 0);
-    if (FAILED(hr)) return hr;
-
-
-    hr = g_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&g_backBuffer));
-    if (FAILED(hr)) return hr;
-
-    hr = g_device->CreateRenderTargetView(g_backBuffer, nullptr, &g_renderTargetView);
-    if (FAILED(hr)) return hr;
-
-    g_context->OMSetRenderTargets(1, &g_renderTargetView, g_depthStencilView);
-
-    mainCamera->viewHeight = _renderHeight;
-    mainCamera->viewWidth = _renderWidth;
-	mainCamera->CreateViewport();
-    g_context->RSSetViewports(1, mainCamera->GetViewport());
-
-    return S_OK;
-}
-
-FlowEngineDX11::Light* FlowEngineDX11::DX11Protocol::AddLight(Light* light)
-{
-    lights.push_back(light);
-    return light;
-}
-
-FlowEngineDX11::Renderer* FlowEngineDX11::DX11Protocol::AddRenderer(Renderer* renderer)
-{
-    renderers.push_back(renderer);
-    return renderer;
-}
-
-void FlowEngineDX11::DX11Protocol::RemoveLight(Light* light)
-{
-    std::erase_if(lights, [light](const Light* element)
-        {
-            return light == element;
-        });
-}
-
-void FlowEngineDX11::DX11Protocol::RemoveRenderer(Renderer* renderer)
-{
-    std::erase_if(renderers, [renderer] (const Renderer* element)
-    {
-        return element == renderer;
-    });
+    g_context->ClearState();
+    g_context->Flush();
 }
 
 void FlowEngineDX11::DX11Protocol::CleanUp()
 {
-    if (g_context) g_context->ClearState();
+    if (g_context) {
+        g_context->ClearState();
+        g_context->Flush();
+    }
+    if (g_blendState) {
+        g_blendState->Release();
+        g_blendState = nullptr;
+    }
+    if (texture2dSampler) {
+        texture2dSampler->Release();
+        texture2dSampler = nullptr;
+    }
     if (g_renderTargetView) {
         g_renderTargetView->Release();
         g_renderTargetView = nullptr;
     }
+    if (g_depthStencilBuffer)
+    {
+        g_depthStencilBuffer->Release();
+        g_depthStencilBuffer = nullptr;
+    }
+    if (g_depthStencilState)
+    {
+        g_depthStencilState->Release();
+        g_depthStencilState = nullptr;
+    }
+    if (g_depthStencilView)
+    {
+        g_depthStencilView->Release();
+        g_depthStencilView = nullptr;
+    }
     if (g_backBuffer) {
         g_backBuffer->Release();
         g_backBuffer = nullptr;
-    }
-    if (g_device) {
-        g_device->Release();
-        g_device = nullptr;
     }
     if (g_context) {
         g_context->Release();
@@ -360,22 +298,40 @@ void FlowEngineDX11::DX11Protocol::CleanUp()
         g_swapChain->Release();
         g_swapChain = nullptr;
     }
-    if (shader) {
-        shader->Release();
-        shader = nullptr;
+    if (g_rasterizerState) {
+        g_rasterizerState->Release();
+        g_rasterizerState = nullptr;
     }
-    if (texture2dSampler) {
-        texture2dSampler->Release();
-        texture2dSampler = nullptr;
+    if (g_device) 
+    {
+        ID3D11Debug* debug = nullptr;
+
+        if (SUCCEEDED(g_device->QueryInterface(IID_PPV_ARGS(&debug))))
+        {
+            debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+            debug->Release();
+        }
+
+        flowio::Console::WriteLine("device references: " + std::to_string(g_device->Release()));
+        g_device = nullptr;
     }
-    Input::CleanUp();
-    AssetDatabase::CleanUp();
+}
+
+void FlowEngineDX11::DX11Protocol::PrepareShadowPass()
+{
+    ID3D11ShaderResourceView* nullSRV = nullptr;
+    g_context->PSSetShaderResources(0, 1, &nullSRV);
+    g_context->VSSetShaderResources(0, 1, &nullSRV);
+    g_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    g_context->OMSetDepthStencilState(g_depthStencilState, 0);
+    g_context->OMSetRenderTargets(0, nullptr, nullptr);
+    g_context->PSSetShader(nullptr, nullptr, 0);
 }
 
 // Drawing functions
-
-void FlowEngineDX11::DX11Protocol::BeginFrame(const Color color)
+void FlowEngineDX11::DX11Protocol::PrepareMainPass()
 {
+    Camera* activeCamera = CameraManager::GetActive();
     g_context->OMSetRenderTargets(
         1,
         &g_renderTargetView,
@@ -383,34 +339,43 @@ void FlowEngineDX11::DX11Protocol::BeginFrame(const Color color)
 
     g_context->OMSetDepthStencilState(g_depthStencilState, 0);
 
-    g_context->RSSetViewports(1, mainCamera->GetViewport());
+    g_context->RSSetViewports(1, activeCamera->GetViewport());
     g_context->RSSetState(g_rasterizerState);
 
-    auto floats = color.ToFloatArray();
-    const float colorArr[4] = {floats[0], floats[1], floats[2], floats[3]};
+    auto floats = activeCamera->backgroundColor.ToFloatArray();
+    const float colorArr[4] = { floats[0], floats[1], floats[2], floats[3] };
 
     g_context->ClearRenderTargetView(g_renderTargetView, colorArr);
     g_context->ClearDepthStencilView(g_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    g_context->PSSetShader(shader->GetPixelShader(), nullptr, 0);
-    g_context->VSSetShader(shader->GetVertexShader(), nullptr, 0);
-    g_context->IASetInputLayout(shader->GetInputLayout());
     g_context->PSSetSamplers(0, 1, &texture2dSampler);
+    g_context->PSSetShader(pixelShader->GetShader(), nullptr, 0);
+    g_context->VSSetShader(vertexShader->GetVertexShader(), nullptr, 0);
+    g_context->IASetInputLayout(vertexShader->GetInputLayout());
     g_context->IASetPrimitiveTopology(
         D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    constexpr float factor[4] = {1,1,1,1}; 
+
+    constexpr float factor[4] = { 1,1,1,1 };
     g_context->OMSetBlendState(g_blendState, factor, 0xffffffff);
 }
 
 void FlowEngineDX11::DX11Protocol::EndFrame()
 {
     g_swapChain->Present(_vSync, 0);
-    flowio::Console::Clear();
 }
 
-void FlowEngineDX11::DX11Protocol::FlushUnusedData()
+// Getters
+ID3D11DeviceContext* FlowEngineDX11::DX11Protocol::GetContext() const
 {
-    g_context->ClearState();
-    g_context->Flush();
-    std::cout << "flushed data";
+    return g_context;
+}
+
+ID3D11Device* FlowEngineDX11::DX11Protocol::GetDevice() const
+{
+    return g_device;
+}
+
+IDXGISwapChain* FlowEngineDX11::DX11Protocol::GetSwapChain() const
+{
+    return g_swapChain;
 }
 

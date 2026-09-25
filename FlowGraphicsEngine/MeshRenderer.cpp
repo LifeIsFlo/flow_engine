@@ -3,32 +3,28 @@
 #include "Sprite.h"
 #include "Vertex.h"
 
-void FlowEngineDX11::MeshRenderer::Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device)
+void FlowEngineDX11::MeshRenderer::Render(const DX11Protocol* dx11_protocol)
 {
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	ID3D11ShaderResourceView* nullSRV = nullptr;
-	if (sprite) g_context->PSSetShaderResources(0, 1, sprite->GetTextureResourceAddress());
-	else g_context->PSSetShaderResources(0, 1, &nullSRV);
-	g_context->IASetVertexBuffers(0, 1, mesh->GetVertexBufferAddress(), &stride, &offset);
-	g_context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, offset);
-	g_context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
+	if (mesh) {
+		auto g_context = dx11_protocol->GetContext();
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		g_context->VSSetConstantBuffers(0, 1, &transformBuffer);
+		g_context->IASetVertexBuffers(0, 1, mesh->GetVertexBufferAddress(), &stride, &offset);
+		g_context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, offset);
+		g_context->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+	}
 }
 
-HRESULT FlowEngineDX11::MeshRenderer::CreateResources(ID3D11DeviceContext* g_context, ID3D11Device* g_device)
+void FlowEngineDX11::MeshRenderer::PrepareMainPass(const DX11Protocol* dx11_protocol)
 {
-	HRESULT hr = CreateBuffers(g_device, g_context);
-	if (FAILED(hr)) return hr;
-
-	hr = mesh->CreateBuffers(g_device);
-	if (FAILED(hr)) return hr;
-
-	if (sprite) {
-		hr = sprite->CreateTexture(g_device);
-		if (FAILED(hr)) return hr;
+	auto g_context = dx11_protocol->GetContext();
+	if (sprite) 
+	{
+		g_context->PSSetShaderResources(0, 1, sprite->GetTextureResourceAddress());
 	}
-
-
-
-	return S_OK;
+	else {
+		ID3D11ShaderResourceView* nullSRV = nullptr;
+		g_context->PSSetShaderResources(0, 1, &nullSRV);
+	}
 }

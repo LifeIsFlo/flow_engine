@@ -2,16 +2,23 @@
 #include "Transform.h"
 #include "Component.h"
 
-void FlowEngineDX11::GameObject::OnInstantiate(FlowEngine* _engine)
-{
-	transform = this->AddComponent<Transform>();
-}
-
-void FlowEngineDX11::GameObject::PrepareDestroy()
-{
-	for (Component* com : _components)
+namespace FlowEngineDX11 {
+	void GameObject::OnInstantiate(FlowEngine* _engine)
 	{
-		com->Destroy();
+		transform = this->AddComponent<Transform>();
 	}
-	_components.clear();
+
+	void GameObject::PrepareDestroy()
+	{
+		for (Component* com : _components)
+		{
+			com->Destroy();
+		}
+		_components.clear();
+	}
+
+	ObjectRegistry GameObject::GetRegistry()
+	{
+		return ObjectRegistry::GameObject;
+	}
 }

@@ -1,7 +1,6 @@
 #pragma once
 #include "FWD.h"
 #include "Renderer.h"
-#include <d3d11.h>
 
 namespace FlowEngineDX11
 {
@@ -10,9 +9,7 @@ namespace FlowEngineDX11
 	public:
 		Mesh* mesh = nullptr;
 		Sprite* sprite = nullptr;
-	protected:
-		void Render(ID3D11DeviceContext* g_context, ID3D11Device* g_device) override;
-	public:
-		HRESULT CreateResources(ID3D11DeviceContext* g_context, ID3D11Device* g_device) override;
+		void Render(const DX11Protocol* dx11_protocol) override;
+		void PrepareMainPass(const DX11Protocol* dx11_protocol) override;
 	};
 }

@@ -1,10 +1,8 @@
 #pragma once
 #include "FWD.h"
-#include <memory>
-#include <vector>
-#include "FlowEngine.h"
 #include "Object.h"
 #include "Component.h"
+#include "FlowEngine.h"
 
 namespace FlowEngineDX11
 {
@@ -42,5 +40,6 @@ namespace FlowEngineDX11
 			return nullptr;
 		}
 		void PrepareDestroy() override;
+		ObjectRegistry GetRegistry() override;
 	};
 }

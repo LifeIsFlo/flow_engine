@@ -13,13 +13,29 @@ namespace FlowEngineDX11
 	class FlowEngine
 	{
 	private:
+		std::unique_ptr<BehaviourProtocol> behaviourProtocol;
+		std::unique_ptr<RenderProtocol> renderProtocol;
+		std::unique_ptr<LightingProtocol> lightingProtocol;
 		std::unique_ptr<DX11Protocol> dx11_protocol;
 		std::vector<std::unique_ptr<Object>> objects;
-		std::vector<Behaviour*> behaviours;
+		std::vector<GameObject*> gameObjects;
+
+		HWND hwnd = nullptr;
+		HINSTANCE hInstance = nullptr;
+		bool running = false;
+		bool requestExit = false;
+		bool objectsDestroyed = true;
 	public:
-		FlowEngine(const size_t& height, const size_t& width, const bool& fullScreen, const std::string& title, const bool& vSync);
+		FlowEngine(const size_t& height, const size_t& width, const std::string& title, const bool& vSync);
 		void StartGameLoop();
-		bool Run();
+		void CleanUp();
+		void ClearState();
+		void RequestExit();
+
+		HRESULT CreateBuffers();
+		HRESULT CreateResources();
+
+		HRESULT Run();
 		bool Tick();
 		bool AddObjectToRegistry(Object* obj);
 		void RemoveObjectFromRegistry(Object* obj);

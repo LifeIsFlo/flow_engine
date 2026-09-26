@@ -18,6 +18,7 @@ namespace FlowEngineDX11
         g_context->RSSetState(g_shadowRasterizerState);
         g_context->OMSetBlendState(g_shadowBlendState, nullptr, 0xffffffff);
         g_context->VSSetShader(ShadowVS->GetVertexShader(), nullptr, 0);
+        g_context->PSSetShader(ShadowPS->GetShader(), nullptr, 0);
         g_context->IASetInputLayout(ShadowVS->GetInputLayout());
 
         for (Light* light : lights) {
@@ -50,6 +51,7 @@ namespace FlowEngineDX11
         };
 
         ShadowVS = AssetDatabase::LoadVertexShader("ShadowVS.cso", ILDesc);
+        ShadowPS = AssetDatabase::LoadPixelShader("ShadowPS.cso");
 
         // Light buffer
         std::vector<LightData> g_lightData{};
@@ -141,7 +143,6 @@ namespace FlowEngineDX11
 
         hr = g_device->CreateShaderResourceView(g_shadowDataCubeMaps, &shadowSRVDesc, &g_shadowDataSRV);
         if (FAILED(hr)) return hr;
-
     }
 
     Light* LightingProtocol::AddLight(Light* light)

@@ -33,11 +33,13 @@ float3 CalculateLightByIndex(uint lightIndex, PSInput input)
     bool obstacle = false;
     
     float3 dir = currentLight.position - input.localPos;
+    float3 ray = normalize(dir);
     float dis = length(dir);
+    
+    shadowMaps.Sample(sampleType, float4(ray, lightIndex));
 
     if (!obstacle)
     {
-        float3 ray = normalize(dir);
         float theta = acos(saturate(dot(ray, normalize(input.normal))));
 
         float incidinceAngleProduct = cos(theta);

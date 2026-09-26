@@ -13,6 +13,7 @@ namespace FlowEngineDX11
 		ID3D11ShaderResourceView* g_shadowDataSRV = nullptr;
 		ID3D11Texture2D* g_shadowDataCubeMaps = nullptr;
 		VertexShader* ShadowVS = nullptr;
+		PixelShader* ShadowPS = nullptr;
 		ID3D11RasterizerState* g_shadowRasterizerState = nullptr;
 		ID3D11BlendState* g_shadowBlendState = nullptr;
 	public:

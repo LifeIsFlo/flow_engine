@@ -1,0 +1,15 @@
+
+{
+    "configurations": [
+        {
+            "name": "Linux to Windows",
+            "compilerPath": "/usr/bin/x86_64-w64-mingw32-g++",
+            "intelliSenseMode": "windows-gcc-x64",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "cppStandard": "c++20"
+        }
+    ],
+    "version": 4
+}

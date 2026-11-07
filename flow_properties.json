@@ -1,0 +1,41 @@
+{
+  "projectName": "Example",
+  "flowVersion": "v1.0.0",
+  "cVersion": "c++23",
+  "mainFile": "Program.cpp",
+  "releaseArgs": [
+    "-Wall",
+    "-Wextra",
+    "-Wreturn-type",
+    "-Werror",
+    "-O2",
+    "-flto=auto"
+  ],
+  "debugArgs": [
+    "-Wall",
+    "-Wextra",
+    "-Wreturn-type",
+    "-Werror"
+  ],
+  "libArgs": [],
+  "compileArgsMINGW": [],
+  "compileArgsGCC": [],
+  "includePathsMINGW": [
+    "/home/flo/Development/flow/flow_lib/headers/windows",
+    "/home/flo/Development/fast_float-main/include/fast_float"
+  ],
+  "includePathsGCC": [
+    "/home/flo/Development/flow/flow_lib/headers/linux",
+    "/home/flo/Development/fast_float-main/include/fast_float"
+  ],
+  "linkerArgsMINGW": [
+    "-static",
+    "-ld3d11",
+    "-ldxgi",
+    "-ld3dcompiler",
+    "-ldxguid",
+    "-lole32",
+    "-luuid"
+  ],
+  "linkerArgsGCC": []
+}
